@@ -196,7 +196,7 @@ export function RpgDashboard() {
 
           <div className="hud-runes hidden items-center gap-5 md:flex">
             <HeaderStat icon={Fire02Icon} label="Nível" value={String(state.stats.level).padStart(2, "0")} />
-            <button type="button" onClick={() => setTrophyCeremony(true)} aria-label="Rever cerimônia dos troféus">
+            <button type="button" onClick={() => { launchTrophyBurst(); setTrophyCeremony(true); }} aria-label="Rever cerimônia dos troféus">
               <HeaderStat icon={Award01Icon} label="Troféus" value={String(state.stats.trophies).padStart(2, "0")} />
             </button>
             <div className="w-44">
@@ -306,7 +306,7 @@ export function RpgDashboard() {
                   ))}
                 </div>
               </div>
-              <button type="button" className="final-shrine-prop" onClick={() => setTrophyCeremony(true)} aria-label="Ver cerimônia do troféu"><span>{state.settings.finalGoal}</span></button>
+              <button type="button" className="final-shrine-prop" onClick={() => { launchTrophyBurst(); setTrophyCeremony(true); }} aria-label="Ver cerimônia do troféu"><span>{state.settings.finalGoal}</span></button>
         </section>
       </div>
 
