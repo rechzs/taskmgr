@@ -216,7 +216,7 @@ export function RpgDashboard() {
         <section className="grid gap-5 xl:grid-cols-[1.12fr_.88fr]">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
             <Card className="ninja-card relative min-h-[540px] overflow-hidden border-emerald-950/70 shadow-2xl shadow-black/60">
-              <GameFxCanvas variant="hero" className="absolute inset-0 z-[1]" />
+              <GameFxCanvas variant="hero" className="absolute inset-0 z-[3]" />
               <div className="quest-plaque absolute left-4 top-4 z-20 max-w-[19rem] p-4 sm:left-6 sm:top-6 sm:p-5">
                 <Badge variant="outline" className="border-emerald-300/20 bg-emerald-950/60 text-emerald-200">
                   <span className="mr-1.5 size-1.5 animate-pulse rounded-full bg-emerald-400" />

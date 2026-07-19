@@ -160,13 +160,18 @@ export function GameFxCanvas({ variant, className }: GameFxCanvasProps) {
 
           scarfFront.clear()
             .moveTo(waistX, waistY)
-            .bezierCurveTo(width * 0.53, waistY - 15 + wave, width * 0.38, waistY + 18 - wave, width * 0.23 + gust, waistY + 3)
-            .bezierCurveTo(width * 0.34, waistY + 40 - wave, width * 0.53, waistY + 23 + wave, waistX, waistY + 12)
+            .bezierCurveTo(width * 0.54, waistY - 7 + wave * 0.45, width * 0.43, waistY + 8 - wave * 0.4, width * 0.31 + gust, waistY - 1)
+            .bezierCurveTo(width * 0.4, waistY + 20 - wave * 0.35, width * 0.54, waistY + 13 + wave * 0.4, waistX, waistY + 8)
             .closePath()
-            .fill({ color: 0x075847, alpha: 0.96 })
-            .moveTo(waistX, waistY + 4)
-            .bezierCurveTo(width * 0.51, waistY - 6 + wave, width * 0.37, waistY + 30 - wave, width * 0.23 + gust, waistY + 8)
-            .stroke({ color: 0x46c8a7, width: 1, alpha: 0.55 });
+            .fill({ color: 0x063b32, alpha: 0.92 })
+            .moveTo(waistX - 4, waistY + 9)
+            .bezierCurveTo(width * 0.55, waistY + 14 - wave * 0.45, width * 0.47, waistY + 34 + wave * 0.55, width * 0.39 - gust * 0.25, waistY + 26)
+            .bezierCurveTo(width * 0.46, waistY + 39 + wave * 0.35, width * 0.55, waistY + 25 - wave * 0.45, waistX - 1, waistY + 15)
+            .closePath()
+            .fill({ color: 0x0a5a49, alpha: 0.88 })
+            .moveTo(waistX, waistY + 2)
+            .bezierCurveTo(width * 0.53, waistY - 4 + wave * 0.4, width * 0.42, waistY + 13 - wave * 0.35, width * 0.31 + gust, waistY + 3)
+            .stroke({ color: 0x51b79d, width: 1, alpha: 0.38 });
         }
       });
 
