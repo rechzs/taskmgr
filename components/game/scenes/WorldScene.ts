@@ -90,14 +90,17 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createLandmarks(worldWidth: number, worldHeight: number) {
+    const compact = this.scale.width < 680;
+    const viewportLeft = (worldWidth - this.scale.width) / 2;
+    const viewportRight = viewportLeft + this.scale.width;
     const landmarks = [
-      { frame: "landmark-0", x: 0.13, y: 0.62, scale: 0.31, name: "MISSÕES" },
-      { frame: "landmark-3", x: 0.82, y: 0.62, scale: 0.3, name: "JORNADA" },
-      { frame: "landmark-7", x: 0.9, y: 0.34, scale: 0.26, name: "TROFÉUS" },
-      { frame: "landmark-4", x: 0.12, y: 0.3, scale: 0.23, name: "FORJA" },
+      { frame: "landmark-0", x: compact ? viewportLeft + 48 : worldWidth * 0.13, y: 0.62, scale: 0.31, name: "MISSÕES" },
+      { frame: "landmark-3", x: compact ? viewportRight - 50 : worldWidth * 0.82, y: 0.62, scale: 0.3, name: "JORNADA" },
+      { frame: "landmark-7", x: compact ? viewportRight - 42 : worldWidth * 0.9, y: 0.34, scale: 0.26, name: "TROFÉUS" },
+      { frame: "landmark-4", x: compact ? viewportLeft + 42 : worldWidth * 0.12, y: 0.3, scale: 0.23, name: "FORJA" },
     ];
     landmarks.forEach((landmark, index) => {
-      const image = this.add.image(worldWidth * landmark.x, worldHeight * landmark.y, "world-props", landmark.frame)
+      const image = this.add.image(landmark.x, worldHeight * landmark.y, "world-props", landmark.frame)
         .setScale(landmark.scale)
         .setDepth(8)
         .setTint(index === 3 ? 0xffc881 : 0xc6ded2);
@@ -125,7 +128,8 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createAltar(worldWidth: number, worldHeight: number) {
-    const x = worldWidth * 0.2;
+    const viewportLeft = (worldWidth - this.scale.width) / 2;
+    const x = this.scale.width < 680 ? viewportLeft + 88 : worldWidth * 0.2;
     const y = worldHeight * 0.71;
     const stone = this.add.graphics();
     stone.fillStyle(0x16231d, 1).lineStyle(3, 0x6b5940, 0.9);

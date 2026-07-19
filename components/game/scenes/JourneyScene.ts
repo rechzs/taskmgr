@@ -33,10 +33,10 @@ export class JourneyScene extends Phaser.Scene {
 
     const veil = this.add.graphics().fillStyle(0x020605, 0.76).fillRect(0, 0, width, contentHeight).setDepth(-1);
     void veil;
-    this.add.text(width / 2, 30, "CAMINHO ATÉ O DESTINO", {
-      fontFamily: PIXEL_FONT, fontSize: compact ? "12px" : "17px", color: "#d7ffe9",
+    this.add.text(compact ? 14 : width / 2, 30, compact ? "CAMINHO AO DESTINO" : "CAMINHO ATÉ O DESTINO", {
+      fontFamily: PIXEL_FONT, fontSize: compact ? "9px" : "17px", color: "#d7ffe9",
       stroke: "#063d30", strokeThickness: 7, align: "center",
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+    }).setOrigin(compact ? 0 : 0.5, 0.5).setScrollFactor(0).setDepth(100);
     this.add.text(width / 2, compact ? 58 : 64, `CAPÍTULOS · ${JOURNEY_START.split("-").reverse().join("/")} → 01/11/2026`, {
       fontFamily: PIXEL_FONT, fontSize: compact ? "6px" : "8px", color: "#9d8670",
     }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
