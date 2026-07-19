@@ -100,7 +100,11 @@ export class TrophyScene extends Phaser.Scene {
     });
 
     makePixelButton(this, width / 2, height - (compact ? 42 : 48), "PRÓXIMO CAPÍTULO", () => this.close(), COLORS.amber).setDepth(60);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.emitters.splice(0).forEach((emitter) => emitter.destroy()));
+    this.input.keyboard?.once("keydown-ESC", () => this.close());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.emitters.splice(0).forEach((emitter) => emitter.destroy());
+      this.input.keyboard?.removeAllListeners();
+    });
   }
 
   private close() {

@@ -102,6 +102,7 @@ export class JourneyScene extends Phaser.Scene {
 
     makePixelButton(this, width - (compact ? 70 : 96), 38, "VOLTAR", () => this.close(), COLORS.amber)
       .setScrollFactor(0).setDepth(120);
+    this.input.keyboard?.once("keydown-ESC", () => this.close());
 
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       this.dragging = true;
@@ -122,7 +123,10 @@ export class JourneyScene extends Phaser.Scene {
       const currentPoint = points[currentIndex];
       this.cameras.main.scrollY = Phaser.Math.Clamp(currentPoint.y - height * 0.48, 0, Math.max(0, contentHeight - height));
     }
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.input.removeAllListeners());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.removeAllListeners();
+      this.input.keyboard?.removeAllListeners();
+    });
   }
 
   private close() {

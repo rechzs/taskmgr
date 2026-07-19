@@ -11,6 +11,8 @@ export class WorldScene extends Phaser.Scene {
   private localizedEmitters: Phaser.GameObjects.Particles.ParticleEmitter[] = [];
   private unsubs: Array<() => void> = [];
   private reducedMotion = false;
+  private readonly openJourneyKey = () => this.openJourney();
+  private readonly openTrophyKey = () => this.openTrophy();
 
   constructor() {
     super("WorldScene");
@@ -22,6 +24,8 @@ export class WorldScene extends Phaser.Scene {
     this.buildWorld();
     this.bindEvents();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.handleResize, this);
+    this.input.keyboard?.on("keydown-J", this.openJourneyKey);
+    this.input.keyboard?.on("keydown-T", this.openTrophyKey);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.cleanup, this);
     gameBus.emit("game:ready", { scene: "WorldScene" });
@@ -51,10 +55,10 @@ export class WorldScene extends Phaser.Scene {
     this.createAltar(worldWidth, worldHeight);
     this.createLocalizedEffects(worldWidth, worldHeight);
 
-    const ninjaScale = Phaser.Math.Clamp(Math.min(width / 820, height / 760), 0.72, 1.18);
-    this.ninja = new NinjaRig(this, worldWidth * (width < 700 ? 0.51 : 0.49), worldHeight * 0.86, ninjaScale);
+    const ninjaScale = Phaser.Math.Clamp(Math.min(width / 760, height / 600), 0.92, 1.34);
+    this.ninja = new NinjaRig(this, worldWidth * (width < 700 ? 0.51 : 0.49), worldHeight * (width < 700 ? 0.73 : 0.72), ninjaScale);
 
-    this.add.text(worldWidth * 0.5, worldHeight * 0.08, "O CAMINHO RESPONDE À DISCIPLINA", {
+    this.add.text(worldWidth * 0.5, worldHeight * 0.14, "O CAMINHO RESPONDE À DISCIPLINA", {
       fontFamily: PIXEL_FONT,
       fontSize: width < 600 ? "8px" : "11px",
       color: "#9eb1a7",
@@ -102,9 +106,8 @@ export class WorldScene extends Phaser.Scene {
         image.on("pointerout", () => image.setTint(index === 2 ? 0xf8ddb0 : 0xc6ded2));
         image.on("pointerup", () => {
           playRuneSound(this, index === 2);
-          if (index === 1) this.scene.launch("JourneyScene");
-          else this.scene.launch("TrophyScene", { trophyCount: this.snapshot?.state.stats.trophies ?? 0, goal: this.snapshot?.state.settings.finalGoal ?? "UFPR" });
-          this.scene.pause();
+          if (index === 1) this.openJourney();
+          else this.openTrophy();
         });
       }
       this.add.text(image.x, image.y + image.displayHeight * 0.36, landmark.name, {
@@ -166,8 +169,8 @@ export class WorldScene extends Phaser.Scene {
     this.unsubs.push(
       gameBus.on("react:state", (snapshot) => { this.snapshot = snapshot; }),
       gameBus.on("react:mission-saved", (result) => this.reactToMission(result)),
-      gameBus.on("react:open-journey", () => { this.scene.launch("JourneyScene"); this.scene.pause(); }),
-      gameBus.on("react:open-trophy", (data) => { this.scene.launch("TrophyScene", data); this.scene.pause(); }),
+      gameBus.on("react:open-journey", () => this.openJourney()),
+      gameBus.on("react:open-trophy", (data) => this.openTrophy(data)),
       gameBus.on("react:resume-world", () => {
         this.cameras.main.zoomTo(1, this.reducedMotion ? 0 : 260, "Cubic.easeOut");
         const bounds = this.cameras.main.getBounds();
@@ -223,8 +226,27 @@ export class WorldScene extends Phaser.Scene {
     this.scene.restart();
   }
 
+  private openJourney() {
+    if (this.scene.isActive("JourneyScene")) return;
+    playRuneSound(this);
+    this.scene.launch("JourneyScene");
+    this.scene.pause();
+  }
+
+  private openTrophy(data?: { trophyCount: number; goal: string }) {
+    if (this.scene.isActive("TrophyScene")) return;
+    playRuneSound(this, true);
+    this.scene.launch("TrophyScene", data ?? {
+      trophyCount: this.snapshot?.state.stats.trophies ?? 0,
+      goal: this.snapshot?.state.settings.finalGoal ?? "UFPR",
+    });
+    this.scene.pause();
+  }
+
   private cleanup() {
     this.scale.off(Phaser.Scale.Events.RESIZE, this.handleResize, this);
+    this.input.keyboard?.off("keydown-J", this.openJourneyKey);
+    this.input.keyboard?.off("keydown-T", this.openTrophyKey);
     this.unsubs.splice(0).forEach((unsubscribe) => unsubscribe());
     this.localizedEmitters.splice(0).forEach((emitter) => emitter.destroy());
   }
