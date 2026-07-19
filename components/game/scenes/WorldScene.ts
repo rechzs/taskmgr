@@ -28,6 +28,7 @@ export class WorldScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-T", this.openTrophyKey);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanup, this);
     this.events.once(Phaser.Scenes.Events.DESTROY, this.cleanup, this);
+    gameBus.emit("game:scene", { scene: "world" });
     gameBus.emit("game:ready", { scene: "WorldScene" });
   }
 

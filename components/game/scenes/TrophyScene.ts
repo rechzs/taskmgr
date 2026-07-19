@@ -1,4 +1,5 @@
 import * as Phaser from "phaser";
+import { gameBus } from "@/components/game/event-bus";
 import { NinjaRig } from "@/components/game/scenes/NinjaRig";
 import { COLORS, makePixelButton, PIXEL_FONT, playRuneSound } from "@/components/game/scenes/scene-utils";
 
@@ -19,6 +20,7 @@ export class TrophyScene extends Phaser.Scene {
   }
 
   create() {
+    gameBus.emit("game:scene", { scene: "trophy" });
     const { width, height } = this.scale;
     const compact = width < 680;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -58,7 +60,11 @@ export class TrophyScene extends Phaser.Scene {
       .setBlendMode(Phaser.BlendModes.ADD).setDepth(9);
     const trophy = this.add.image(width / 2, top + templeHeight * 0.49, "relics", "relic-5")
       .setScale(compact ? 0.34 : 0.46).setTint(0xffe8a5).setAlpha(0).setDepth(20);
-    const ninja = new NinjaRig(this, width * (compact ? 0.18 : 0.25), height * 0.86, compact ? 0.52 : 0.67).setAlpha(0).setDepth(22);
+    const ninjaX = width * (compact ? 0.2 : 0.23);
+    const ninjaY = height * 0.82;
+    const ninjaLight = this.add.circle(ninjaX, ninjaY - (compact ? 54 : 78), compact ? 78 : 112, COLORS.jade, 0)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+    const ninja = new NinjaRig(this, ninjaX, ninjaY, compact ? 0.6 : 0.78).setAlpha(0).setDepth(22);
 
     this.add.text(width / 2, compact ? 34 : 42, "CERIMÔNIA DO TROFÉU", {
       fontFamily: PIXEL_FONT, fontSize: compact ? "11px" : "17px", color: "#ffe9ae", stroke: "#4d2d07", strokeThickness: 7,
@@ -95,6 +101,7 @@ export class TrophyScene extends Phaser.Scene {
       this.tweens.add({ targets: light, alpha: 0.48, scale: 1.45, duration: reduced ? 0 : 750, ease: "Sine.easeOut" });
       this.tweens.add({ targets: trophy, alpha: 1, y: trophy.y - 24, scale: trophy.scale * 1.12, duration: reduced ? 0 : 850, ease: "Back.easeOut" });
       this.tweens.add({ targets: ninja, alpha: 1, x: width * (compact ? 0.25 : 0.31), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
+      this.tweens.add({ targets: ninjaLight, alpha: 0.24, x: width * (compact ? 0.25 : 0.31), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
       this.tweens.add({ targets: subtitle, alpha: 1, duration: reduced ? 0 : 650, delay: reduced ? 0 : 400 });
       ninja.celebrate();
     });
@@ -109,6 +116,7 @@ export class TrophyScene extends Phaser.Scene {
 
   private close() {
     playRuneSound(this, true);
+    gameBus.emit("game:scene", { scene: "world" });
     this.cameras.main.fadeOut(260, 0, 0, 0);
     this.time.delayedCall(260, () => {
       this.scene.resume("WorldScene");

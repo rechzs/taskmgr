@@ -11,6 +11,7 @@ export type GameEvents = {
   "game:missions": { source: "altar" | "hud" };
   "game:settings": { source: "world" | "hud" };
   "game:error": { message: string };
+  "game:scene": { scene: "world" | "journey" | "trophy" };
   "react:state": GameSnapshot;
   "react:mission-saved": {
     completedPillarIds: number[];

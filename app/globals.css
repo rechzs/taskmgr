@@ -95,7 +95,10 @@
   align-items: center;
   gap: .75rem;
   pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
 }
+.game-hud-minimal:not([data-scene="world"]) { opacity: 0; transform: translateY(-12px); pointer-events: none; }
+.game-hud-minimal:not([data-scene="world"]) .hud-actions { pointer-events: none; }
 
 .hud-objective, .hud-center, .hud-game-button {
   clip-path: polygon(7px 0, calc(100% - 4px) 0, 100% 7px, calc(100% - 7px) 100%, 4px calc(100% - 2px), 0 calc(100% - 8px));

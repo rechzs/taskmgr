@@ -22,6 +22,7 @@ export function GameShell() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const [activeScene, setActiveScene] = useState<"world" | "journey" | "trophy">("world");
 
   const loadState = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -54,6 +55,7 @@ export function GameShell() {
       gameBus.on("game:missions", () => setMissionOpen(true)),
       gameBus.on("game:settings", () => setSettingsOpen(true)),
       gameBus.on("game:error", ({ message }) => setError(message)),
+      gameBus.on("game:scene", ({ scene }) => setActiveScene(scene)),
     ];
     return () => unsubs.forEach((unsubscribe) => unsubscribe());
   }, []);
@@ -111,7 +113,7 @@ export function GameShell() {
   return (
     <main className="game-root">
       <PhaserCanvas />
-      <div className="game-hud-minimal" aria-label="Informações da jornada">
+      <div className="game-hud-minimal" data-scene={activeScene} aria-label="Informações da jornada">
         <div className="hud-objective">
           <HugeiconsIcon icon={Target02Icon} size={18} />
           <div><small>OBJETIVO FINAL</small><strong>{state.settings.finalGoal}</strong></div>

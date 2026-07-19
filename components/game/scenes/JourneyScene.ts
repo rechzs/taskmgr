@@ -15,6 +15,7 @@ export class JourneyScene extends Phaser.Scene {
   }
 
   create() {
+    gameBus.emit("game:scene", { scene: "journey" });
     const snapshot = gameBus.getSnapshot();
     const { width, height } = this.scale;
     const compact = width < 680;
@@ -73,7 +74,7 @@ export class JourneyScene extends Phaser.Scene {
         const week = Math.floor(dayIndex / 7);
         const propFrame = `landmark-${week % 7}`;
         const landmark = this.add.image(point.x, point.y - (compact ? 24 : 31), "world-props", propFrame)
-          .setScale(compact ? 0.075 : 0.105)
+          .setScale(compact ? 0.105 : 0.15)
           .setDepth(6)
           .setTint(state === "future" ? 0x4a5651 : state === "missed" ? 0x8d5b5b : 0xb8ead3)
           .setAlpha(state === "future" ? 0.45 : 0.9);
@@ -131,6 +132,7 @@ export class JourneyScene extends Phaser.Scene {
 
   private close() {
     playRuneSound(this);
+    gameBus.emit("game:scene", { scene: "world" });
     this.scene.resume("WorldScene");
     this.scene.stop();
   }
