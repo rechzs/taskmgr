@@ -78,22 +78,45 @@
   background-size: 64px 64px; mask-image: linear-gradient(to bottom, black, transparent 88%);
 }
 
-.dojo-particle { position: absolute; bottom: -12px; width: 3px; height: 3px; border-radius: 99px; background: #34d399; box-shadow: 0 0 10px #34d399; opacity: 0; animation: particle-rise linear infinite; }
+.dojo-particle { position: absolute; bottom: -12px; width: 3px; height: 3px; border-radius: 99px; background: #34d399; box-shadow: 0 0 5px #34d399, 0 0 16px rgba(52,211,153,.75); opacity: 0; animation: particle-rise linear infinite; will-change: transform, opacity; }
+.dojo-particle.violet { background: #a78bfa; box-shadow: 0 0 5px #a78bfa, 0 0 18px rgba(139,92,246,.8); }
+.dojo-particle.ember { background: #fbbf24; box-shadow: 0 0 6px #f59e0b, 0 0 20px rgba(245,158,11,.8); animation-name: ember-rise; }
+.dojo-particle.large { width: 5px; height: 5px; }
 .quest-label { color: color-mix(in oklch, #34d399 88%, var(--foreground)); font-size: .625rem; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
 
 .ninja-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 49.7%, color-mix(in oklch, #34d399 8%, transparent) 50%, transparent 50.3%), linear-gradient(0deg, transparent 49.7%, color-mix(in oklch, #34d399 6%, transparent) 50%, transparent 50.3%); background-size: 96px 96px; mask-image: radial-gradient(circle at 65% 58%, black, transparent 70%); }
 .ninja-stage { perspective: 850px; }
 .ninja-aura { position: absolute; left: 66%; top: 48%; width: min(58vw, 30rem); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(52,211,153,.22) 0, rgba(16,185,129,.08) 38%, transparent 68%); filter: blur(8px); animation: aura-breathe 3.2s ease-in-out infinite; }
+.ninja-halo { position: absolute; left: 66%; top: 48%; translate: -50% -50%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; will-change: transform, filter, opacity; }
+.ninja-halo-one { width: min(54vw, 28rem); background: conic-gradient(from 0deg, transparent, rgba(52,211,153,.26), transparent 25%, rgba(167,139,250,.18), transparent 60%, rgba(52,211,153,.22), transparent); filter: blur(16px); animation: halo-spin 13s linear infinite, hue-pulse 7s ease-in-out infinite; }
+.ninja-halo-two { width: min(39vw, 20rem); border: 2px solid rgba(110,231,183,.12); box-shadow: inset 0 0 45px rgba(16,185,129,.13), 0 0 32px rgba(139,92,246,.12); animation: halo-reverse 9s linear infinite; }
 .ninja-orbit { position: absolute; left: 66%; top: 48%; border: 1px solid rgba(52,211,153,.18); border-radius: 50%; transform-style: preserve-3d; }
 .ninja-orbit::after { content: ""; position: absolute; width: 7px; height: 7px; border-radius: 99px; background: #34d399; box-shadow: 0 0 16px #34d399; }
 .ninja-orbit-one { width: 22rem; height: 22rem; margin: -11rem; animation: orbit-one 11s linear infinite; }
 .ninja-orbit-one::after { left: 16%; top: 8%; }
 .ninja-orbit-two { width: 17rem; height: 17rem; margin: -8.5rem; border-color: rgba(167,139,250,.16); animation: orbit-two 8s linear infinite reverse; }
 .ninja-orbit-two::after { right: 12%; bottom: 14%; background: #a78bfa; box-shadow: 0 0 16px #a78bfa; }
-.ninja-character { position: absolute; z-index: 2; left: 66%; bottom: 1.5rem; width: min(62%, 28rem); translate: -50% 0; transform-origin: center bottom; filter: drop-shadow(0 26px 28px rgba(0,0,0,.48)) drop-shadow(0 0 28px rgba(16,185,129,.12)); }
+.ninja-character { position: absolute; z-index: 2; left: 66%; bottom: 1.5rem; width: min(62%, 28rem); translate: -50% 0; transform-origin: center bottom; filter: saturate(1.08) contrast(1.03) drop-shadow(0 26px 28px rgba(0,0,0,.48)) drop-shadow(0 0 28px rgba(16,185,129,.2)); animation: ninja-color-grade 8s ease-in-out infinite; will-change: transform, filter; }
 .ninja-character img { width: 100%; height: auto; }
+.ninja-character::after { content: ""; position: absolute; inset: 0; background: linear-gradient(112deg, transparent 28%, rgba(255,255,255,.02) 37%, rgba(255,255,255,.66) 46%, rgba(110,231,183,.28) 51%, transparent 60%); background-size: 240% 100%; mix-blend-mode: screen; -webkit-mask: url('/ninja.png') center/contain no-repeat; mask: url('/ninja.png') center/contain no-repeat; animation: armor-reflection 4.8s cubic-bezier(.22,.7,.2,1) infinite; pointer-events: none; }
 .ninja-stage.is-wounded .ninja-character { filter: grayscale(.25) drop-shadow(0 22px 30px rgba(248,113,113,.18)); }
 .ninja-ground { position: absolute; left: 67%; bottom: 1.4rem; width: min(48vw, 24rem); height: 3rem; translate: -50%; border-radius: 50%; background: radial-gradient(ellipse, rgba(16,185,129,.24), rgba(0,0,0,.22) 48%, transparent 70%); filter: blur(5px); }
+
+.wind-stream { position: absolute; z-index: 3; left: 45%; width: 19rem; height: 2px; border-radius: 99px; opacity: 0; background: linear-gradient(90deg, transparent, rgba(167,243,208,.16), rgba(255,255,255,.72), rgba(52,211,153,.3), transparent); filter: blur(.15px) drop-shadow(0 0 5px rgba(52,211,153,.6)); transform: skewX(-24deg); animation: wind-slash 3.7s ease-in-out infinite; pointer-events: none; }
+.wind-stream::after { content: ""; position: absolute; left: 15%; top: 8px; width: 70%; height: 1px; background: inherit; opacity: .55; }
+.wind-stream-one { top: 36%; animation-delay: -1s; }
+.wind-stream-two { top: 51%; left: 38%; width: 25rem; animation-delay: -2.8s; animation-duration: 4.9s; }
+.wind-stream-three { top: 67%; left: 49%; width: 15rem; animation-delay: -.4s; animation-duration: 3.2s; }
+
+.spirit-flame { position: absolute; z-index: 4; width: 8px; height: 18px; border-radius: 70% 30% 65% 35%; background: radial-gradient(circle at 45% 70%, white 0 8%, #6ee7b7 22%, #10b981 48%, rgba(16,185,129,0) 72%); filter: blur(.25px) drop-shadow(0 0 6px #34d399) drop-shadow(0 0 15px rgba(16,185,129,.8)); opacity: 0; transform-origin: 50% 100%; animation: spirit-fire 2.9s ease-in-out infinite; }
+.spirit-flame:nth-of-type(even) { background: radial-gradient(circle at 45% 70%, white 0 8%, #c4b5fd 22%, #8b5cf6 48%, rgba(139,92,246,0) 72%); filter: blur(.25px) drop-shadow(0 0 7px #a78bfa) drop-shadow(0 0 16px rgba(139,92,246,.8)); }
+.spirit-flame-1 { left: 47%; top: 40%; animation-delay: -.3s; }
+.spirit-flame-2 { left: 78%; top: 35%; animation-delay: -1.4s; scale: .8; }
+.spirit-flame-3 { left: 57%; top: 70%; animation-delay: -2.1s; scale: 1.3; }
+.spirit-flame-4 { left: 84%; top: 62%; animation-delay: -.8s; scale: .65; }
+.spirit-flame-5 { left: 38%; top: 61%; animation-delay: -1.7s; scale: .7; }
+.spirit-flame-6 { left: 69%; top: 25%; animation-delay: -2.5s; scale: .55; }
+.spirit-flame-7 { left: 73%; top: 76%; animation-delay: -.1s; scale: .9; }
 
 .score-ring { --score: 0deg; position: relative; display: grid; flex: 0 0 auto; place-items: center; width: 7.5rem; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(#34d399 var(--score), color-mix(in oklch, var(--foreground) 8%, transparent) 0); box-shadow: 0 0 30px rgba(16,185,129,.1); }
 .score-ring::before { content: ""; position: absolute; inset: 7px; border-radius: inherit; background: color-mix(in oklch, var(--card) 96%, transparent); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--foreground) 8%, transparent); }
@@ -122,11 +145,49 @@
 .trophy-rune.unlocked { border-color: rgba(251,191,36,.32); background: rgba(245,158,11,.12); color: #fbbf24; box-shadow: 0 0 18px rgba(245,158,11,.13), inset 0 0 12px rgba(245,158,11,.08); }
 .final-trophy { animation: trophy-hover 4s ease-in-out infinite; }
 
+.magic-arsenal { position: relative; }
+.magic-arsenal::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 125%, rgba(139,92,246,.13), transparent 50%), linear-gradient(120deg, transparent 30%, rgba(255,255,255,.025) 48%, transparent 66%); pointer-events: none; }
+.relic-grid { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
+.relic-card { position: relative; min-height: 15rem; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 1rem; background: radial-gradient(circle at 50% 40%, rgba(52,211,153,.11), rgba(0,0,0,.38) 65%), #0a0d0c; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 32px rgba(0,0,0,.18); isolation: isolate; }
+.relic-card::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 12px, rgba(255,255,255,.012) 12px 13px); }
+.relic-card::after { content: ""; position: absolute; inset: 1px; border: 1px solid rgba(52,211,153,.06); border-radius: inherit; box-shadow: inset 0 0 26px rgba(52,211,153,.08); pointer-events: none; }
+.relic-violet { background: radial-gradient(circle at 50% 40%, rgba(139,92,246,.17), rgba(0,0,0,.4) 65%), #0a090d; }
+.relic-amber { background: radial-gradient(circle at 50% 40%, rgba(245,158,11,.15), rgba(0,0,0,.4) 65%), #0d0b08; }
+.relic-card.locked { filter: saturate(.45); }
+.relic-art { position: relative; z-index: 2; width: 100%; height: 11.5rem; background-image: url('/kage-relics.png'); background-repeat: no-repeat; background-size: 300% 200%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 17px rgba(52,211,153,.24)); animation: relic-float 4s ease-in-out infinite; will-change: transform, filter; }
+.relic-art-1 { background-position: 0 0; }
+.relic-art-2 { background-position: 50% 0; animation-delay: -.7s; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(139,92,246,.32)); }
+.relic-art-3 { background-position: 100% 0; animation-delay: -1.4s; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(245,158,11,.3)); }
+.relic-art-4 { background-position: 0 100%; animation-delay: -2.1s; }
+.relic-art-5 { background-position: 50% 100%; animation-delay: -2.8s; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 20px rgba(139,92,246,.4)); }
+.relic-art-6 { background-position: 100% 100%; animation-delay: -3.5s; filter: drop-shadow(0 12px 12px rgba(0,0,0,.5)) drop-shadow(0 0 20px rgba(245,158,11,.4)); }
+.relic-card.locked .relic-art { opacity: .38; filter: grayscale(.8) drop-shadow(0 10px 10px rgba(0,0,0,.65)); }
+.relic-sheen { position: absolute; z-index: 3; top: -30%; left: -75%; width: 45%; height: 150%; rotate: 18deg; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); mix-blend-mode: screen; animation: relic-sheen 5.6s ease-in-out infinite; pointer-events: none; }
+.relic-stars { position: absolute; z-index: 4; inset: 0; pointer-events: none; }
+.relic-stars i { --star: 0; position: absolute; width: 3px; height: 3px; border-radius: 50%; background: white; box-shadow: 0 0 7px #6ee7b7, 0 0 14px #34d399; animation: relic-star 2s ease-in-out infinite; animation-delay: calc(var(--star) * -.38s); }
+.relic-stars i:nth-child(1) { left: 12%; top: 18%; }
+.relic-stars i:nth-child(2) { left: 30%; top: 54%; }
+.relic-stars i:nth-child(3) { left: 48%; top: 22%; }
+.relic-stars i:nth-child(4) { left: 66%; top: 60%; }
+.relic-stars i:nth-child(5) { left: 84%; top: 30%; }
+.relic-rarity { flex: 0 0 auto; color: #fbbf24; font-size: .44rem; font-weight: 950; letter-spacing: .12em; text-shadow: 0 0 9px rgba(245,158,11,.6); }
+
 @keyframes particle-rise { 0% { opacity: 0; transform: translate3d(0,0,0); } 15% { opacity: .45; } 100% { opacity: 0; transform: translate3d(22px,-105vh,0); } }
+@keyframes ember-rise { 0% { opacity: 0; transform: translate3d(0,0,0) scale(.6); } 18% { opacity: .65; } 65% { transform: translate3d(-14px,-66vh,0) scale(1); } 100% { opacity: 0; transform: translate3d(20px,-108vh,0) scale(.3); } }
 @keyframes aura-breathe { 0%,100% { opacity: .55; scale: .92; } 50% { opacity: 1; scale: 1.08; } }
 @keyframes orbit-one { to { transform: rotate(360deg) rotateX(62deg) rotateY(12deg); } }
 @keyframes orbit-two { to { transform: rotate(360deg) rotateX(72deg) rotateY(-18deg); } }
 @keyframes trophy-hover { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-7px) rotate(1deg); } }
+@keyframes halo-spin { to { transform: rotate(360deg) scale(1.04); } }
+@keyframes halo-reverse { 0% { transform: rotate(0) scale(.95); opacity: .5; } 50% { opacity: .95; } 100% { transform: rotate(-360deg) scale(.95); opacity: .5; } }
+@keyframes hue-pulse { 0%,100% { filter: blur(16px) hue-rotate(0deg); } 50% { filter: blur(20px) hue-rotate(42deg); } }
+@keyframes ninja-color-grade { 0%,100% { filter: saturate(1.05) contrast(1.03) hue-rotate(0deg) drop-shadow(0 26px 28px rgba(0,0,0,.48)) drop-shadow(0 0 24px rgba(16,185,129,.16)); } 50% { filter: saturate(1.25) contrast(1.08) hue-rotate(7deg) drop-shadow(0 29px 30px rgba(0,0,0,.5)) drop-shadow(0 0 37px rgba(139,92,246,.24)); } }
+@keyframes armor-reflection { 0%,15% { background-position: 180% 0; opacity: 0; } 32% { opacity: .9; } 55%,100% { background-position: -60% 0; opacity: 0; } }
+@keyframes wind-slash { 0%,12% { opacity: 0; transform: translate3d(-9rem,12px,0) skewX(-24deg) scaleX(.45); } 28% { opacity: .75; } 65% { opacity: .25; } 100% { opacity: 0; transform: translate3d(13rem,-18px,0) skewX(-24deg) scaleX(1.1); } }
+@keyframes spirit-fire { 0%,100% { opacity: 0; transform: translateY(12px) rotate(-8deg) scale(.55); } 28% { opacity: .9; } 60% { opacity: .65; transform: translateY(-18px) rotate(11deg) scale(1.15); } 85% { opacity: 0; transform: translateY(-37px) rotate(-6deg) scale(.45); } }
+@keyframes relic-float { 0%,100% { transform: translateY(1px) scale(.96); } 50% { transform: translateY(-7px) scale(1.02); } }
+@keyframes relic-sheen { 0%,58% { left: -75%; opacity: 0; } 66% { opacity: .8; } 83%,100% { left: 140%; opacity: 0; } }
+@keyframes relic-star { 0%,100% { opacity: .15; scale: .5; } 50% { opacity: 1; scale: 1.7; } }
 
 @media (max-width: 640px) {
   .ninja-card { min-height: 520px; }
@@ -139,7 +200,12 @@
   .score-ring span { font-size: 1.75rem; }
   .weekly-chart { gap: .3rem; height: 11.5rem; }
   .day-score, .day-rune { font-size: .5rem; }
+  .relic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .relic-card { min-height: 13.5rem; }
+  .relic-art { height: 10rem; }
 }
+
+@media (min-width: 641px) and (max-width: 1100px) { .relic-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

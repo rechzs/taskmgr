@@ -70,6 +70,15 @@ const ACCENTS: Record<Accent, { glow: string; soft: string; text: string; bar: s
 
 const PILLAR_ICONS = [Dumbbell02Icon, Leaf02Icon, BookOpen02Icon];
 
+const RELICS = [
+  { name: "Lâmina do Foco", lore: "Combo diário", rarity: "ÉPICO", tone: "emerald" },
+  { name: "Máscara do Vazio", lore: "Proteção de sequência", rarity: "MÍTICO", tone: "violet" },
+  { name: "Pergaminho Solar", lore: "Sabedoria acumulada", rarity: "RARO", tone: "amber" },
+  { name: "Amuleto da Alma", lore: "Recuperação de falhas", rarity: "ÉPICO", tone: "emerald" },
+  { name: "Orbe do Destino", lore: "Multiplicador de XP", rarity: "LENDÁRIO", tone: "violet" },
+  { name: "Cálice da Ascensão", lore: "Semana perfeita", rarity: "LENDÁRIO", tone: "amber" },
+] as const;
+
 export function RpgDashboard() {
   const [today] = useState(() => toLocalDate(new Date()));
   const [weekStart] = useState(() => toLocalDate(startOfWeek(new Date())));
@@ -213,8 +222,14 @@ export function RpgDashboard() {
 
               <div className={cn("ninja-stage absolute inset-x-0 bottom-0 top-28", missedToday && "is-wounded")}>
                 <div className="ninja-aura" />
+                <div className="ninja-halo ninja-halo-one" />
+                <div className="ninja-halo ninja-halo-two" />
                 <div className="ninja-orbit ninja-orbit-one" />
                 <div className="ninja-orbit ninja-orbit-two" />
+                <div className="wind-stream wind-stream-one" />
+                <div className="wind-stream wind-stream-two" />
+                <div className="wind-stream wind-stream-three" />
+                {Array.from({ length: 7 }, (_, index) => <span key={index} className={`spirit-flame spirit-flame-${index + 1}`} />)}
                 <motion.div
                   className="ninja-character"
                   animate={{ y: [0, -10, 0], rotate: [0, -0.8, 0.6, 0] }}
@@ -312,6 +327,22 @@ export function RpgDashboard() {
           </Card>
 
           <PerformanceCard title="Performance semanal" score={weeklyScore} subtitle={weeklySubtitle(weeklyScore)} />
+        </section>
+
+        <section>
+          <Card className="magic-arsenal overflow-hidden border-violet-400/15 bg-card/70 backdrop-blur-xl">
+            <CardHeader className="flex-row items-end justify-between space-y-0">
+              <div>
+                <p className="quest-label">Inventário arcano</p>
+                <CardTitle className="mt-1 font-heading text-2xl font-black">Relíquias da jornada</CardTitle>
+                <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">Artefatos despertam conforme sua disciplina cresce. Cada peça carrega metal, runas e energia do seu progresso.</p>
+              </div>
+              <Badge variant="outline" className="hidden border-violet-400/25 bg-violet-400/10 text-violet-300 sm:flex">6 ARTEFATOS</Badge>
+            </CardHeader>
+            <CardContent className="relic-grid">
+              {RELICS.map((relic, index) => <MagicRelic key={relic.name} relic={relic} index={index} unlocked={index === 0 || (state.stats.level > index)} />)}
+            </CardContent>
+          </Card>
         </section>
 
         <section>
@@ -511,7 +542,21 @@ function SettingsDialog({ open, onOpenChange, state, weekStart, onSaved }: { ope
 }
 
 function ParticleField() {
-  return <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">{Array.from({ length: 20 }, (_, index) => <span key={index} className="dojo-particle" style={{ left: `${(index * 37) % 100}%`, animationDelay: `${(index % 7) * -1.2}s`, animationDuration: `${7 + (index % 5)}s` }} />)}</div>;
+  return <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">{Array.from({ length: 48 }, (_, index) => <span key={index} className={cn("dojo-particle", index % 3 === 1 && "violet", index % 5 === 0 && "ember", index % 7 === 0 && "large")} style={{ left: `${(index * 37) % 100}%`, animationDelay: `${(index % 11) * -1.15}s`, animationDuration: `${6 + (index % 7)}s` }} />)}</div>;
+}
+
+function MagicRelic({ relic, index, unlocked }: { relic: (typeof RELICS)[number]; index: number; unlocked: boolean }) {
+  return (
+    <motion.article whileHover={{ y: -8, scale: 1.025 }} transition={{ type: "spring", stiffness: 260, damping: 18 }} className={cn("relic-card", `relic-${relic.tone}`, !unlocked && "locked")}>
+      <div className="relic-stars" aria-hidden="true">{Array.from({ length: 5 }, (_, star) => <i key={star} style={{ "--star": star } as CSSProperties} />)}</div>
+      <div className={cn("relic-art", `relic-art-${index + 1}`)} aria-hidden="true" />
+      <div className="relic-sheen" aria-hidden="true" />
+      <div className="relative z-10 border-t border-white/8 bg-black/35 p-3.5 text-white backdrop-blur-md">
+        <div className="flex items-center justify-between gap-2"><p className="truncate font-heading text-sm font-black">{relic.name}</p><span className="relic-rarity">{relic.rarity}</span></div>
+        <p className="mt-1 text-[10px] text-white/45">{unlocked ? relic.lore : `Desbloqueia no nível ${index + 1}`}</p>
+      </div>
+    </motion.article>
+  );
 }
 
 function buildWeek(weekStart: string, today: string, pillars: Pillar[], checkins: DashboardState["checkins"]) {
