@@ -8,6 +8,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Award01Icon,
   BookOpen02Icon,
+  Calendar03Icon,
   CheckmarkCircle02Icon,
   CrownIcon,
   Dumbbell02Icon,
@@ -33,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { GameFxCanvas } from "@/components/dashboard/game-fx-canvas";
 import { cn } from "@/lib/utils";
 import type { Accent, DashboardState, Pillar } from "@/lib/types";
 
@@ -69,6 +70,8 @@ const ACCENTS: Record<Accent, { glow: string; soft: string; text: string; bar: s
 };
 
 const PILLAR_ICONS = [Dumbbell02Icon, Leaf02Icon, BookOpen02Icon];
+const JOURNEY_START = "2026-07-19";
+const JOURNEY_END = "2026-11-01";
 
 const RELICS = [
   { name: "Lâmina do Foco", lore: "Combo diário", rarity: "ÉPICO", tone: "emerald" },
@@ -130,6 +133,10 @@ export function RpgDashboard() {
     : 0;
   const xpIntoLevel = state ? state.stats.xp % 800 : 0;
   const missedToday = Boolean(todayCheckin && todayScore < 100);
+  const journey = useMemo(
+    () => buildJourney(JOURNEY_START, JOURNEY_END, today, activePillars, state?.checkins ?? []),
+    [today, activePillars, state?.checkins],
+  );
 
   async function saveCheckin() {
     if (!today) return;
@@ -165,8 +172,9 @@ export function RpgDashboard() {
 
   return (
     <main className="dojo-shell min-h-svh overflow-hidden bg-background text-foreground">
-      <div className="dojo-grid fixed inset-0 -z-20" aria-hidden="true" />
-      <ParticleField />
+      <div className="dojo-world fixed inset-0 -z-30" aria-hidden="true" />
+      <div className="dojo-world-shade fixed inset-0 -z-20" aria-hidden="true" />
+      <GameFxCanvas variant="world" className="fixed inset-0 -z-10" />
 
       <header className="sticky top-0 z-40 border-b border-white/5 bg-background/72 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -193,7 +201,6 @@ export function RpgDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <Button variant="outline" size="icon-lg" className="rounded-full bg-background/60" onClick={() => setSettingsOpen(true)} aria-label="Configurar jornada">
               <HugeiconsIcon icon={Settings02Icon} size={18} />
             </Button>
@@ -208,32 +215,25 @@ export function RpgDashboard() {
 
         <section className="grid gap-5 xl:grid-cols-[1.12fr_.88fr]">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-            <Card className="ninja-card relative min-h-[500px] overflow-hidden border-white/10 bg-card/70 shadow-2xl shadow-black/25 backdrop-blur-xl">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/70 to-transparent" />
-              <div className="absolute left-5 top-5 z-20 sm:left-7 sm:top-7">
-                <Badge variant="outline" className="border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
+            <Card className="ninja-card relative min-h-[540px] overflow-hidden border-emerald-950/70 shadow-2xl shadow-black/60">
+              <GameFxCanvas variant="hero" className="absolute inset-0 z-[1]" />
+              <div className="quest-plaque absolute left-4 top-4 z-20 max-w-[19rem] p-4 sm:left-6 sm:top-6 sm:p-5">
+                <Badge variant="outline" className="border-emerald-300/20 bg-emerald-950/60 text-emerald-200">
                   <span className="mr-1.5 size-1.5 animate-pulse rounded-full bg-emerald-400" />
-                  MISSÃO ATIVA
+                  CAPÍTULO ATIVO
                 </Badge>
-                <h1 className="mt-4 max-w-md font-heading text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                  Domine o dia.<br /><span className="text-muted-foreground">Forje o destino.</span>
+                <p className="mt-3 text-[9px] font-black uppercase tracking-[0.22em] text-amber-300/75">Destino · 1 NOV 2026</p>
+                <h1 className="mt-1 font-heading text-2xl font-black leading-[1.05] tracking-[-0.035em] text-stone-50 sm:text-3xl">
+                  O caminho para <span className="text-emerald-300">{state.settings.finalGoal}</span> é construído hoje.
                 </h1>
+                <p className="mt-3 text-xs leading-5 text-stone-300/65">Cada missão coloca uma nova pedra na trilha.</p>
               </div>
 
-              <div className={cn("ninja-stage absolute inset-x-0 bottom-0 top-28", missedToday && "is-wounded")}>
-                <div className="ninja-aura" />
-                <div className="ninja-halo ninja-halo-one" />
-                <div className="ninja-halo ninja-halo-two" />
-                <div className="ninja-orbit ninja-orbit-one" />
-                <div className="ninja-orbit ninja-orbit-two" />
-                <div className="wind-stream wind-stream-one" />
-                <div className="wind-stream wind-stream-two" />
-                <div className="wind-stream wind-stream-three" />
-                {Array.from({ length: 7 }, (_, index) => <span key={index} className={`spirit-flame spirit-flame-${index + 1}`} />)}
+              <div className={cn("ninja-stage absolute inset-0", missedToday && "is-wounded")}>
                 <motion.div
                   className="ninja-character"
-                  animate={{ y: [0, -10, 0], rotate: [0, -0.8, 0.6, 0] }}
-                  transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                  animate={{ y: [0, -7, 0], rotate: [0, -0.35, 0.25, 0], scale: [1, 1.008, 1] }}
+                  transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <Image src="/ninja.png" alt="Ninja guardião da jornada" width={1254} height={1254} priority />
                 </motion.div>
@@ -287,6 +287,8 @@ export function RpgDashboard() {
             </Card>
           </div>
         </section>
+
+        <JourneyPath days={journey} today={today} goal={state.settings.finalGoal} />
 
         <section className="grid gap-5 xl:grid-cols-[1.45fr_.55fr]">
           <Card className="border-white/10 bg-card/70 backdrop-blur-xl">
@@ -541,10 +543,6 @@ function SettingsDialog({ open, onOpenChange, state, weekStart, onSaved }: { ope
   );
 }
 
-function ParticleField() {
-  return <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">{Array.from({ length: 48 }, (_, index) => <span key={index} className={cn("dojo-particle", index % 3 === 1 && "violet", index % 5 === 0 && "ember", index % 7 === 0 && "large")} style={{ left: `${(index * 37) % 100}%`, animationDelay: `${(index % 11) * -1.15}s`, animationDuration: `${6 + (index % 7)}s` }} />)}</div>;
-}
-
 function MagicRelic({ relic, index, unlocked }: { relic: (typeof RELICS)[number]; index: number; unlocked: boolean }) {
   return (
     <motion.article whileHover={{ y: -8, scale: 1.025 }} transition={{ type: "spring", stiffness: 260, damping: 18 }} className={cn("relic-card", `relic-${relic.tone}`, !unlocked && "locked")}>
@@ -559,6 +557,51 @@ function MagicRelic({ relic, index, unlocked }: { relic: (typeof RELICS)[number]
   );
 }
 
+type JourneyDay = {
+  date: string;
+  score: number;
+  status: "perfect" | "partial" | "missed" | "future";
+};
+
+function JourneyPath({ days, today, goal }: { days: JourneyDay[]; today: string; goal: string }) {
+  const todayIndex = Math.max(0, days.findIndex((day) => day.date === today));
+  const remaining = Math.max(0, days.length - todayIndex - 1);
+
+  return (
+    <section>
+      <Card className="journey-map overflow-hidden border-amber-950/70 bg-[#090b0a]/90">
+        <CardHeader className="relative z-10 flex-row items-end justify-between space-y-0">
+          <div>
+            <div className="flex items-center gap-2 text-amber-300"><HugeiconsIcon icon={Calendar03Icon} size={17} /><p className="quest-label !text-amber-300">Mapa da campanha</p></div>
+            <CardTitle className="mt-2 font-heading text-2xl font-black">A trilha até 1 de novembro</CardTitle>
+            <p className="mt-1 text-xs text-stone-400">Cada pedra é um dia. Vitórias iluminam o caminho; faltas deixam cicatrizes.</p>
+          </div>
+          <div className="hidden text-right sm:block"><p className="font-heading text-3xl font-black text-amber-300">{remaining}</p><p className="text-[9px] font-black uppercase tracking-[.18em] text-stone-500">dias restantes</p></div>
+        </CardHeader>
+        <CardContent className="relative z-10 px-0 pb-5">
+          <div className="journey-scroll px-6 pb-4 pt-8">
+            <div className="journey-track" style={{ "--journey-days": days.length } as CSSProperties}>
+              {days.map((day, index) => (
+                <div key={day.date} className="journey-step" style={{ "--wave": `${Math.sin(index * 0.52) * 18}px` } as CSSProperties}>
+                  <div className={cn("journey-stone", day.status, day.date === today && "today")} title={`${formatJourneyDate(day.date)} · ${day.score}%`}>
+                    <span>{index + 1}</span>
+                  </div>
+                  {(index % 7 === 0 || day.date === today || index === days.length - 1) && <p className={cn("journey-date", day.date === today && "today-label")}>{day.date === today ? "HOJE" : formatJourneyDate(day.date)}</p>}
+                </div>
+              ))}
+              <div className="journey-finish">
+                <HugeiconsIcon icon={CrownIcon} size={24} />
+                <div><p>1 NOV 2026</p><strong>{goal}</strong></div>
+              </div>
+            </div>
+          </div>
+          <div className="journey-legend mx-6"><span className="perfect">Vitória</span><span className="partial">Parcial</span><span className="missed">Cicatriz</span><span className="future">Não construído</span></div>
+        </CardContent>
+      </Card>
+    </section>
+  );
+}
+
 function buildWeek(weekStart: string, today: string, pillars: Pillar[], checkins: DashboardState["checkins"]) {
   if (!weekStart) return [];
   return WEEK_DAYS.map((weekday, index) => {
@@ -566,6 +609,19 @@ function buildWeek(weekStart: string, today: string, pillars: Pillar[], checkins
     const requiredPillars = pillars.filter((pillar) => pillar.requiredDays.includes(weekday.js));
     const checkin = checkins.find((entry) => entry.day === date);
     return { date, weekday: weekday.js, required: requiredPillars.length, completedIds: checkin?.completedPillarIds ?? [], score: date > today ? 0 : performanceScore(requiredPillars, checkin?.completedPillarIds ?? []) };
+  });
+}
+
+function buildJourney(start: string, end: string, today: string, pillars: Pillar[], checkins: DashboardState["checkins"]): JourneyDay[] {
+  const totalDays = Math.max(0, Math.round((new Date(`${end}T12:00:00`).getTime() - new Date(`${start}T12:00:00`).getTime()) / 86_400_000));
+  return Array.from({ length: totalDays + 1 }, (_, index) => {
+    const date = addDays(start, index);
+    const weekday = new Date(`${date}T12:00:00`).getDay();
+    const required = pillars.filter((pillar) => pillar.requiredDays.includes(weekday));
+    const checkin = checkins.find((entry) => entry.day === date);
+    const score = date > today ? 0 : performanceScore(required, checkin?.completedPillarIds ?? []);
+    const status: JourneyDay["status"] = date > today ? "future" : score === 100 ? "perfect" : score > 0 ? "partial" : "missed";
+    return { date, score, status };
   });
 }
 
@@ -592,3 +648,4 @@ function weeklySubtitle(score: number) {
 function startOfWeek(date: Date) { const value = new Date(date); const day = value.getDay(); value.setDate(value.getDate() - (day === 0 ? 6 : day - 1)); value.setHours(12, 0, 0, 0); return value; }
 function toLocalDate(date: Date) { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, "0"); const day = String(date.getDate()).padStart(2, "0"); return `${year}-${month}-${day}`; }
 function addDays(date: string, amount: number) { const value = new Date(`${date}T12:00:00`); value.setDate(value.getDate() + amount); return toLocalDate(value); }
+function formatJourneyDate(date: string) { return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(`${date}T12:00:00`)).replace(".", "").toUpperCase(); }

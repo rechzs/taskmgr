@@ -90,7 +90,8 @@ export async function loadState(weekStart: string): Promise<DashboardState> {
     sql<{ day: string; completedPillarIds: number[] }[]>`
       SELECT day::text AS day, completed_pillar_ids AS "completedPillarIds"
       FROM checkins
-      WHERE day BETWEEN ${weekStart}::date AND ${weekEnd}::date
+      WHERE day BETWEEN LEAST(${weekStart}::date, DATE '2026-07-19')
+                    AND GREATEST(${weekEnd}::date, DATE '2026-11-01')
       ORDER BY day
     `,
     sql<{ totalCompleted: number; emptyCheckins: number }[]>`
