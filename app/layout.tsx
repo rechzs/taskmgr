@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/nunito-sans";
+import "@fontsource/press-start-2p";
 import "./globals.css";
 
 export const metadata: Metadata = {

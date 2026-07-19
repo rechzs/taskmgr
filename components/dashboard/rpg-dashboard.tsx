@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import confetti from "canvas-confetti";
 import { motion } from "motion/react";
@@ -22,7 +21,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { GameFxCanvas } from "@/components/dashboard/game-fx-canvas";
+import { AnimatedNinja } from "@/components/dashboard/animated-ninja";
 import { cn } from "@/lib/utils";
 import type { Accent, DashboardState, Pillar } from "@/lib/types";
 
@@ -92,6 +91,7 @@ export function RpgDashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
   const [saving, setSaving] = useState(false);
+  const [trophyCeremony, setTrophyCeremony] = useState(false);
 
   const loadState = useCallback(async () => {
     if (!weekStart) return;
@@ -105,6 +105,7 @@ export function RpgDashboard() {
       const current = data.checkins.find((checkin) => checkin.day === today);
       setSelected(current?.completedPillarIds ?? []);
       if (today && !current) setCheckinOpen(true);
+      return data;
     } catch {
       setError("A conexão com o dojo falhou. Verifique o banco e tente novamente.");
     } finally {
@@ -158,7 +159,12 @@ export function RpgDashboard() {
         });
       }
       setCheckinOpen(false);
-      await loadState();
+      const previousTrophies = state?.stats.trophies ?? 0;
+      const updated = await loadState();
+      if (updated && updated.stats.trophies > previousTrophies) {
+        launchTrophyBurst();
+        setTrophyCeremony(true);
+      }
     } catch {
       setError("Não foi possível registrar a missão. Tente novamente.");
     } finally {
@@ -171,29 +177,30 @@ export function RpgDashboard() {
   }
 
   return (
-    <main className="dojo-shell min-h-svh overflow-hidden bg-background text-foreground">
+    <main className="dojo-shell game-world min-h-svh overflow-hidden bg-background text-foreground">
       <div className="dojo-world fixed inset-0 -z-30" aria-hidden="true" />
       <div className="dojo-world-shade fixed inset-0 -z-20" aria-hidden="true" />
       <GameFxCanvas variant="world" className="fixed inset-0 -z-10" />
 
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-background/72 backdrop-blur-2xl">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="relative flex size-9 items-center justify-center rounded-lg border border-emerald-400/30 bg-emerald-400/10 text-emerald-400">
+      <header className="game-hud sticky top-0 z-40">
+        <div className="mx-auto flex min-h-16 max-w-[1500px] items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+          <div className="game-logo flex items-center gap-3">
+            <div className="game-logo-rune relative flex size-10 items-center justify-center text-emerald-300">
               <HugeiconsIcon icon={Sword02Icon} size={19} strokeWidth={2} />
-              <span className="absolute -right-1 -top-1 size-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" />
             </div>
             <div>
-              <p className="font-heading text-sm font-black tracking-[0.18em]">KAGE</p>
-              <p className="text-[9px] uppercase tracking-[0.22em] text-muted-foreground">Dojo de performance</p>
+              <p className="pixel-title text-sm text-emerald-100">KAGE</p>
+              <p className="pixel-caption mt-1">DOJO DA DISCIPLINA</p>
             </div>
           </div>
 
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hud-runes hidden items-center gap-5 md:flex">
             <HeaderStat icon={Fire02Icon} label="Nível" value={String(state.stats.level).padStart(2, "0")} />
-            <HeaderStat icon={Award01Icon} label="Troféus" value={String(state.stats.trophies).padStart(2, "0")} />
+            <button type="button" onClick={() => setTrophyCeremony(true)} aria-label="Rever cerimônia dos troféus">
+              <HeaderStat icon={Award01Icon} label="Troféus" value={String(state.stats.trophies).padStart(2, "0")} />
+            </button>
             <div className="w-44">
-              <div className="mb-1.5 flex justify-between text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              <div className="pixel-caption mb-1.5 flex justify-between">
                 <span>XP</span><span>{xpIntoLevel} / 800</span>
               </div>
               <Progress value={(xpIntoLevel / 800) * 100} className="[&_[data-slot=progress-indicator]]:bg-emerald-400" />
@@ -201,109 +208,56 @@ export function RpgDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon-lg" className="rounded-full bg-background/60" onClick={() => setSettingsOpen(true)} aria-label="Configurar jornada">
+            <Button variant="outline" size="icon-lg" className="hud-settings" onClick={() => setSettingsOpen(true)} aria-label="Configurar jornada">
               <HugeiconsIcon icon={Settings02Icon} size={18} />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+      <div className="mx-auto max-w-[1500px] space-y-10 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
         {error && (
-          <div className="rounded-xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-sm text-red-300">{error}</div>
+          <div className="danger-scroll px-4 py-3 text-sm text-red-200">{error}</div>
         )}
 
-        <section className="grid gap-5 xl:grid-cols-[1.12fr_.88fr]">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
-            <Card className="ninja-card relative min-h-[540px] overflow-hidden border-emerald-950/70 shadow-2xl shadow-black/60">
-              <GameFxCanvas variant="hero" className="absolute inset-0 z-[3]" />
-              <div className="quest-plaque absolute left-4 top-4 z-20 max-w-[19rem] p-4 sm:left-6 sm:top-6 sm:p-5">
-                <Badge variant="outline" className="border-emerald-300/20 bg-emerald-950/60 text-emerald-200">
-                  <span className="mr-1.5 size-1.5 animate-pulse rounded-full bg-emerald-400" />
-                  CAPÍTULO ATIVO
-                </Badge>
-                <p className="mt-3 text-[9px] font-black uppercase tracking-[0.22em] text-amber-300/75">Destino · 1 NOV 2026</p>
-                <h1 className="mt-1 font-heading text-2xl font-black leading-[1.05] tracking-[-0.035em] text-stone-50 sm:text-3xl">
-                  O caminho para <span className="text-emerald-300">{state.settings.finalGoal}</span> é construído hoje.
-                </h1>
-                <p className="mt-3 text-xs leading-5 text-stone-300/65">Cada missão coloca uma nova pedra na trilha.</p>
-              </div>
-
-              <div className={cn("ninja-stage absolute inset-0", missedToday && "is-wounded")}>
-                <motion.div
-                  className="ninja-character"
-                  animate={{ y: [0, -7, 0], rotate: [0, -0.35, 0.25, 0], scale: [1, 1.008, 1] }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Image src="/ninja.png" alt="Ninja guardião da jornada" width={1254} height={1254} priority />
-                </motion.div>
-                <div className="ninja-ground" />
-              </div>
-
-              <div className="absolute bottom-5 left-5 z-20 w-[calc(100%-2.5rem)] sm:bottom-7 sm:left-7 sm:w-72">
-                <div className="rounded-xl border border-white/10 bg-black/45 p-4 text-white shadow-xl backdrop-blur-xl">
-                  <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/55">
-                    <span>Classe atual</span><span>NV. {state.stats.level}</span>
-                  </div>
-                  <p className="mt-1 font-heading text-lg font-black">Ninja da Disciplina</p>
-                  <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
-                    <motion.div className="h-full bg-gradient-to-r from-emerald-500 via-teal-300 to-violet-400" initial={{ width: 0 }} animate={{ width: `${(xpIntoLevel / 800) * 100}%` }} transition={{ duration: 1.2, ease: "easeOut" }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute bottom-6 right-6 hidden text-right sm:block">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Próximo rank</p>
-                <p className="font-heading text-sm font-black">Lâmina Fantasma</p>
-              </div>
-            </Card>
+        <section className="world-stage relative min-h-[690px] overflow-hidden">
+          <GameFxCanvas variant="hero" className="absolute inset-0 z-[2]" />
+          <motion.div className="quest-sign absolute left-4 top-6 z-20 max-w-[25rem] p-5 sm:left-9 sm:top-10 sm:p-7" initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }}>
+            <p className="pixel-caption text-amber-300">CAPÍTULO · 1 NOV 2026</p>
+            <h1 className="pixel-heading mt-4 text-stone-50">FORJE O CAMINHO ATÉ <span>{state.settings.finalGoal}</span></h1>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-stone-300/70">Cada missão ergue uma nova construção no caminho do seu destino.</p>
           </motion.div>
 
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
-            <PerformanceCard title="Performance diária" score={todayScore} subtitle={dailySubtitle(todayScore, Boolean(todayCheckin))} daily danger={missedToday} />
-            <Card className="border-white/10 bg-card/70 backdrop-blur-xl">
-              <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
-                <div>
-                  <p className="quest-label">Missões de hoje</p>
-                  <CardTitle className="mt-1 font-heading text-2xl font-black">Os três pilares</CardTitle>
-                </div>
-                <Button size="sm" onClick={() => setCheckinOpen(true)} className="bg-emerald-400 text-black hover:bg-emerald-300">
-                  Fazer check-in
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {todayPillars.length ? todayPillars.map((pillar, index) => (
-                  <MissionRow key={pillar.id} pillar={pillar} icon={PILLAR_ICONS[index]} completed={todayCheckin?.completedPillarIds.includes(pillar.id) ?? false} />
-                )) : (
-                  <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Dia de recuperação. Nenhuma missão obrigatória.</div>
-                )}
-                {todayCheckin && todayScore < 100 && (
-                  <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-red-300">
-                    <HugeiconsIcon icon={SkullIcon} size={18} />
-                    <div><p className="text-xs font-bold uppercase tracking-wider">Penalidade ativa</p><p className="text-xs text-red-300/75">Disciplina incompleta · XP potencial perdido</p></div>
-                  </motion.div>
-                )}
-              </CardContent>
-            </Card>
+          <AnimatedNinja wounded={missedToday} className="absolute bottom-0 left-[18%] z-10 h-[88%] w-[58%]" />
+          <div className="ninja-nameplate absolute bottom-6 left-5 z-20 p-4 sm:left-9 sm:w-80">
+            <div className="pixel-caption flex justify-between"><span>NINJA DA DISCIPLINA</span><span>NV {state.stats.level}</span></div>
+            <div className="xp-rune mt-3"><motion.i initial={{ width: 0 }} animate={{ width: `${(xpIntoLevel / 800) * 100}%` }} /></div>
           </div>
+
+          <aside className="performance-totem absolute right-4 top-7 z-20 w-[19rem] p-5 sm:right-8 sm:top-10">
+            <PerformanceCard title="Poder diário" score={todayScore} subtitle={dailySubtitle(todayScore, Boolean(todayCheckin))} daily danger={missedToday} />
+          </aside>
+
+          <aside className="mission-shrine absolute bottom-5 right-4 z-20 w-[21rem] max-w-[calc(100%-2rem)] p-5 sm:bottom-8 sm:right-8">
+            <div className="flex items-start justify-between gap-3">
+              <div><p className="pixel-caption text-emerald-300">MISSÕES DE HOJE</p><h2 className="pixel-subheading mt-2">TRÊS PILARES</h2></div>
+              <Button size="sm" onClick={() => setCheckinOpen(true)} className="quest-action">ABRIR</Button>
+            </div>
+            <div className="mt-4 space-y-2">
+              {todayPillars.length ? todayPillars.map((pillar, index) => <MissionRow key={pillar.id} pillar={pillar} icon={PILLAR_ICONS[index]} completed={todayCheckin?.completedPillarIds.includes(pillar.id) ?? false} />) : <p className="rest-day py-5 text-center text-xs">DIA DE RECUPERAÇÃO</p>}
+            </div>
+            {todayCheckin && todayScore < 100 && <div className="curse-mark mt-3 flex items-center gap-2"><HugeiconsIcon icon={SkullIcon} size={17} /><span>PENALIDADE ATIVA · XP PERDIDO</span></div>}
+          </aside>
         </section>
 
         <JourneyPath days={journey} today={today} goal={state.settings.finalGoal} />
 
-        <section className="grid gap-5 xl:grid-cols-[1.45fr_.55fr]">
-          <Card className="border-white/10 bg-card/70 backdrop-blur-xl">
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <div>
-                <p className="quest-label">Relatório de batalha</p>
-                <CardTitle className="mt-1 font-heading text-2xl font-black">Semana atual</CardTitle>
-                <p className="mt-1 text-xs text-muted-foreground">Segunda → Domingo</p>
-              </div>
-              <div className="text-right">
-                <p className="font-heading text-3xl font-black tabular-nums">{weeklyScore}%</p>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">performance</p>
-              </div>
-            </CardHeader>
-            <CardContent>
+        <section className="battle-camp grid gap-6 p-6 lg:p-8 xl:grid-cols-[1.45fr_.55fr]">
+          <div className="battle-scroll p-5 sm:p-7">
+            <div className="flex items-center justify-between gap-5">
+              <div><p className="pixel-caption text-amber-300">RELATÓRIO DE BATALHA</p><h2 className="pixel-subheading mt-3">SEMANA ATUAL</h2><p className="mt-2 text-xs text-stone-500">SEGUNDA → DOMINGO</p></div>
+              <div className="text-right"><p className="pixel-score">{weeklyScore}%</p><p className="pixel-caption">PODER</p></div>
+            </div>
               <div className="weekly-chart">
                 {week.map((day, index) => (
                   <motion.div key={day.date} className="day-column" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.06 }}>
@@ -325,38 +279,23 @@ export function RpgDashboard() {
                   return <PillarWeekStat key={pillar.id} pillar={pillar} icon={PILLAR_ICONS[index]} completed={completed} required={required} />;
                 })}
               </div>
-            </CardContent>
-          </Card>
-
-          <PerformanceCard title="Performance semanal" score={weeklyScore} subtitle={weeklySubtitle(weeklyScore)} />
+          </div>
+          <div className="week-totem p-6"><PerformanceCard title="Poder semanal" score={weeklyScore} subtitle={weeklySubtitle(weeklyScore)} /></div>
         </section>
 
-        <section>
-          <Card className="magic-arsenal overflow-hidden border-violet-400/15 bg-card/70 backdrop-blur-xl">
-            <CardHeader className="flex-row items-end justify-between space-y-0">
-              <div>
-                <p className="quest-label">Inventário arcano</p>
-                <CardTitle className="mt-1 font-heading text-2xl font-black">Relíquias da jornada</CardTitle>
-                <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">Artefatos despertam conforme sua disciplina cresce. Cada peça carrega metal, runas e energia do seu progresso.</p>
-              </div>
-              <Badge variant="outline" className="hidden border-violet-400/25 bg-violet-400/10 text-violet-300 sm:flex">6 ARTEFATOS</Badge>
-            </CardHeader>
-            <CardContent className="relic-grid">
-              {RELICS.map((relic, index) => <MagicRelic key={relic.name} relic={relic} index={index} unlocked={index === 0 || (state.stats.level > index)} />)}
-            </CardContent>
-          </Card>
+        <section className="relic-sanctuary p-6 sm:p-8">
+          <div className="mb-7 flex items-end justify-between"><div><p className="pixel-caption text-violet-300">SANTUÁRIO ARCANO</p><h2 className="pixel-subheading mt-3">RELÍQUIAS DESPERTAS</h2></div><Badge variant="outline" className="hidden border-violet-400/25 bg-violet-400/10 text-violet-300 sm:flex">6 ARTEFATOS</Badge></div>
+          <div className="relic-grid">{RELICS.map((relic, index) => <MagicRelic key={relic.name} relic={relic} index={index} unlocked={index === 0 || (state.stats.level > index)} />)}</div>
         </section>
 
-        <section>
-          <Card className="trophy-vault overflow-hidden border-amber-400/20 bg-card/70 backdrop-blur-xl">
-            <CardContent className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+        <section className="trophy-temple grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
                 <div className="flex items-center gap-2 text-amber-400">
                   <HugeiconsIcon icon={CrownIcon} size={18} />
-                  <p className="quest-label !text-amber-400">Caminho do troféu final</p>
+                  <p className="pixel-caption !text-amber-400">CAMINHO DO TROFÉU FINAL</p>
                 </div>
                 <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
-                  <h2 className="font-heading text-3xl font-black tracking-tight">Objetivo: {state.settings.finalGoal}</h2>
+                  <h2 className="pixel-subheading mt-3">OBJETIVO: {state.settings.finalGoal}</h2>
                   <p className="pb-1 text-sm text-muted-foreground">{state.stats.trophies} de {state.settings.trophyTarget} troféus semanais</p>
                 </div>
                 <div className="mt-6 flex flex-wrap gap-2">
@@ -367,15 +306,7 @@ export function RpgDashboard() {
                   ))}
                 </div>
               </div>
-              <div className="final-trophy relative mx-auto flex size-36 items-center justify-center lg:mx-0">
-                <div className="absolute inset-0 animate-pulse rounded-full bg-amber-400/15 blur-2xl" />
-                <div className="relative flex size-24 items-center justify-center rounded-[2rem] border border-amber-300/30 bg-gradient-to-br from-amber-300 via-amber-500 to-orange-700 text-black shadow-[0_0_45px_rgba(245,158,11,.35)]">
-                  <HugeiconsIcon icon={Award01Icon} size={48} strokeWidth={1.8} />
-                </div>
-                <span className="absolute bottom-0 rounded-full border border-amber-400/25 bg-black/70 px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-amber-300">Troféu final</span>
-              </div>
-            </CardContent>
-          </Card>
+              <button type="button" className="final-shrine-prop" onClick={() => setTrophyCeremony(true)} aria-label="Ver cerimônia do troféu"><span>{state.settings.finalGoal}</span></button>
         </section>
       </div>
 
@@ -390,6 +321,7 @@ export function RpgDashboard() {
         saving={saving}
       />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} state={state} weekStart={weekStart} onSaved={async () => { setSettingsOpen(false); await loadState(); }} />
+      <TrophyCeremony open={trophyCeremony} trophyCount={state.stats.trophies} goal={state.settings.finalGoal} onClose={() => setTrophyCeremony(false)} />
     </main>
   );
 }
@@ -408,17 +340,17 @@ function LoadingDojo({ error, onRetry }: { error: string; onRetry: () => void })
 }
 
 function HeaderStat({ icon, label, value }: { icon: typeof Fire02Icon; label: string; value: string }) {
-  return <div className="flex items-center gap-2"><HugeiconsIcon icon={icon} size={17} className="text-emerald-400" /><div><p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p><p className="font-heading text-sm font-black tabular-nums">{value}</p></div></div>;
+  return <div className="hud-stat flex items-center gap-2"><HugeiconsIcon icon={icon} size={17} className="text-emerald-300" /><div><p className="pixel-caption">{label}</p><p className="pixel-value tabular-nums">{value}</p></div></div>;
 }
 
 function MissionRow({ pillar, icon, completed }: { pillar: Pillar; icon: typeof Dumbbell02Icon; completed: boolean }) {
   const accent = ACCENTS[pillar.accent];
   return (
-    <div className={cn("group flex items-center gap-3 rounded-xl border p-3 transition-all", completed ? accent.soft : "border-white/8 bg-white/[.025]")}> 
-      <div className={cn("flex size-10 items-center justify-center rounded-lg border bg-black/10", accent.soft, accent.text)}><HugeiconsIcon icon={icon} size={19} /></div>
-      <div className="min-w-0 flex-1"><p className="truncate font-heading text-sm font-black">{pillar.name}</p><p className="text-[10px] uppercase tracking-wider text-muted-foreground">+120 XP</p></div>
-      <div className={cn("flex size-7 items-center justify-center rounded-full border", completed ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/15 text-muted-foreground")}>
-        {completed ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} /> : <span className="size-1.5 rounded-full bg-current" />}
+    <div className={cn("mission-rune group flex items-center gap-3 p-2.5 transition-all", completed && "completed")}>
+      <div className={cn("mission-glyph flex size-9 items-center justify-center", accent.text)}><HugeiconsIcon icon={icon} size={18} /></div>
+      <div className="min-w-0 flex-1"><p className="truncate text-xs font-black">{pillar.name}</p><p className="pixel-caption mt-1">+120 XP</p></div>
+      <div className={cn("mission-seal flex size-7 items-center justify-center", completed && "completed")}>
+        {completed ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} /> : <span>◆</span>}
       </div>
     </div>
   );
@@ -427,55 +359,56 @@ function MissionRow({ pillar, icon, completed }: { pillar: Pillar; icon: typeof 
 function PerformanceCard({ title, score, subtitle, daily = false, danger = false }: { title: string; score: number; subtitle: string; daily?: boolean; danger?: boolean }) {
   const level = score >= 90 ? "S" : score >= 75 ? "A" : score >= 50 ? "B" : score > 0 ? "C" : "F";
   return (
-    <Card className={cn("overflow-hidden border-white/10 bg-card/70 backdrop-blur-xl", danger && "border-red-400/25")}>
-      <CardContent className="flex h-full min-h-48 items-center gap-5 p-5 sm:p-6">
-        <div className="score-ring" style={{ "--score": `${score * 3.6}deg` } as CSSProperties}>
-          <div><span>{score}</span><small>%</small></div>
-        </div>
+    <div className={cn("performance-rune h-full", danger && "danger")}>
+      <div className="flex h-full items-center gap-4">
+        <div className="score-crystal" style={{ "--score": `${score * 3.6}deg` } as CSSProperties}><div><span>{score}</span><small>%</small></div></div>
         <div className="min-w-0 flex-1">
-          <p className="quest-label">{title}</p>
-          <div className="mt-2 flex items-center gap-2"><span className={cn("rank-badge", level === "S" && "elite", level === "F" && "failed")}>{level}</span><p className="font-heading text-xl font-black">Rank {level}</p></div>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">{subtitle}</p>
-          {daily && <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400">Atualiza após o check-in</p>}
+          <p className="pixel-caption text-emerald-300">{title}</p>
+          <div className="mt-2 flex items-center gap-2"><span className={cn("rank-gem", level === "S" && "elite", level === "F" && "failed")}>{level}</span><p className="pixel-subheading !text-sm">RANK {level}</p></div>
+          <p className="mt-2 text-[11px] leading-5 text-stone-400">{subtitle}</p>
+          {daily && <p className="pixel-caption mt-3 text-emerald-400">MUDA APÓS O SELO</p>}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function PillarWeekStat({ pillar, icon, completed, required }: { pillar: Pillar; icon: typeof Dumbbell02Icon; completed: number; required: number }) {
   const accent = ACCENTS[pillar.accent];
-  return <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[.025] p-3"><HugeiconsIcon icon={icon} size={17} className={accent.text} /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{pillar.name}</p><div className="mt-1 h-1 overflow-hidden rounded-full bg-white/8"><div className={cn("h-full bg-gradient-to-r", accent.bar)} style={{ width: `${required ? Math.min(100, (completed / required) * 100) : 0}%` }} /></div></div><span className="text-[10px] tabular-nums text-muted-foreground">{completed}/{required}</span></div>;
+  return <div className="pillar-banner flex items-center gap-3 p-3"><HugeiconsIcon icon={icon} size={17} className={accent.text} /><div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{pillar.name}</p><div className="xp-rune mt-2"><i className={cn("bg-gradient-to-r", accent.bar)} style={{ width: `${required ? Math.min(100, (completed / required) * 100) : 0}%` }} /></div></div><span className="pixel-caption tabular-nums">{completed}/{required}</span></div>;
 }
 
 function CheckinDialog({ open, onOpenChange, pillars, selected, onToggle, onClear, onSave, saving }: { open: boolean; onOpenChange: (open: boolean) => void; pillars: Pillar[]; selected: number[]; onToggle: (id: number) => void; onClear: () => void; onSave: () => void; saving: boolean }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden border-emerald-400/20 bg-[#0d1110]/96 p-0 text-white shadow-[0_0_80px_rgba(16,185,129,.14)] sm:max-w-lg">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent" />
-        <DialogHeader className="p-6 pb-2">
-          <div className="mb-3 flex size-11 items-center justify-center rounded-xl border border-emerald-400/25 bg-emerald-400/10 text-emerald-400"><HugeiconsIcon icon={Target02Icon} size={22} /></div>
-          <DialogTitle className="font-heading text-2xl font-black">Relatório da missão</DialogTitle>
-          <DialogDescription className="text-white/50">Quais pilares você honrou hoje? Selecione todos os concluídos.</DialogDescription>
+      <DialogContent className="quest-scroll overflow-visible border-0 bg-transparent p-0 text-[#27180d] shadow-none sm:max-w-xl">
+        <div className="scroll-rod top" aria-hidden="true" />
+        <div className="scroll-paper px-8 py-10 sm:px-12">
+        <DialogHeader>
+          <div className="mx-auto mb-4 flex size-11 items-center justify-center text-emerald-950"><HugeiconsIcon icon={Target02Icon} size={25} /></div>
+          <DialogTitle className="pixel-heading !text-lg !text-[#27180d]">RELATÓRIO DA MISSÃO</DialogTitle>
+          <DialogDescription className="text-[#53391f]">Marque os pilares honrados. O pergaminho lembrará sua escolha.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-3 px-6 py-4 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {pillars.map((pillar, index) => {
             const chosen = selected.includes(pillar.id);
             const accent = ACCENTS[pillar.accent];
             return (
-              <motion.button key={pillar.id} type="button" whileTap={{ scale: 0.96 }} onClick={() => onToggle(pillar.id)} className={cn("relative rounded-xl border p-4 text-left transition-all", chosen ? cn(accent.soft, accent.glow) : "border-white/10 bg-white/[.025] hover:bg-white/[.05]")}>
-                <HugeiconsIcon icon={PILLAR_ICONS[index]} size={22} className={accent.text} />
-                <p className="mt-5 truncate font-heading text-sm font-black">{pillar.name}</p>
-                <p className="mt-1 text-[9px] uppercase tracking-wider text-white/35">{chosen ? "Concluída" : "Pendente"}</p>
-                {chosen && <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-emerald-400 text-black"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={13} /></span>}
+              <motion.button key={pillar.id} type="button" whileTap={{ scale: 0.94 }} onClick={() => onToggle(pillar.id)} className={cn("scroll-choice relative p-4 text-left", chosen && "chosen")}>
+                <HugeiconsIcon icon={PILLAR_ICONS[index]} size={22} className={chosen ? accent.text : "text-[#604627]"} />
+                <p className="mt-5 truncate text-xs font-black">{pillar.name}</p>
+                <p className="pixel-caption mt-2 !text-[#70502d]">{chosen ? "HONRADA" : "PENDENTE"}</p>
+                {chosen && <span className="scroll-seal absolute right-3 top-3"><HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} /></span>}
               </motion.button>
             );
           })}
         </div>
-        <button type="button" onClick={onClear} className="mx-6 rounded-lg border border-red-400/15 bg-red-400/5 px-3 py-2 text-xs text-red-300/75 transition-colors hover:bg-red-400/10">Hoje não concluí nenhuma missão</button>
-        <DialogFooter className="mt-2 border-white/8 bg-black/25 p-5">
-          <Button onClick={onSave} disabled={saving} className="h-10 bg-emerald-400 px-5 text-black hover:bg-emerald-300">{saving ? "Registrando..." : "Selar relatório"}</Button>
+        <button type="button" onClick={onClear} className="mt-4 text-xs font-bold text-red-950/70 underline decoration-dashed underline-offset-4">NÃO CONCLUÍ NENHUMA MISSÃO</button>
+        <DialogFooter className="mt-6">
+          <Button onClick={onSave} disabled={saving} className="scroll-submit h-11 px-6">{saving ? "REGISTRANDO..." : "SELAR PERGAMINHO"}</Button>
         </DialogFooter>
+        </div>
+        <div className="scroll-rod bottom" aria-hidden="true" />
       </DialogContent>
     </Dialog>
   );
@@ -568,21 +501,21 @@ function JourneyPath({ days, today, goal }: { days: JourneyDay[]; today: string;
   const remaining = Math.max(0, days.length - todayIndex - 1);
 
   return (
-    <section>
-      <Card className="journey-map overflow-hidden border-amber-950/70 bg-[#090b0a]/90">
-        <CardHeader className="relative z-10 flex-row items-end justify-between space-y-0">
+    <section className="journey-map overflow-hidden">
+        <div className="relative z-10 flex items-end justify-between gap-5 px-6 pb-0 pt-7 sm:px-8">
           <div>
-            <div className="flex items-center gap-2 text-amber-300"><HugeiconsIcon icon={Calendar03Icon} size={17} /><p className="quest-label !text-amber-300">Mapa da campanha</p></div>
-            <CardTitle className="mt-2 font-heading text-2xl font-black">A trilha até 1 de novembro</CardTitle>
-            <p className="mt-1 text-xs text-stone-400">Cada pedra é um dia. Vitórias iluminam o caminho; faltas deixam cicatrizes.</p>
+            <div className="flex items-center gap-2 text-amber-300"><HugeiconsIcon icon={Calendar03Icon} size={17} /><p className="pixel-caption !text-amber-300">MAPA DA CAMPANHA</p></div>
+            <h2 className="pixel-subheading mt-3">A TRILHA ATÉ 1 DE NOVEMBRO</h2>
+            <p className="mt-2 text-xs text-stone-400">Cada missão constrói um marco. Faltas deixam ruínas pelo caminho.</p>
           </div>
-          <div className="hidden text-right sm:block"><p className="font-heading text-3xl font-black text-amber-300">{remaining}</p><p className="text-[9px] font-black uppercase tracking-[.18em] text-stone-500">dias restantes</p></div>
-        </CardHeader>
-        <CardContent className="relative z-10 px-0 pb-5">
+          <div className="hidden text-right sm:block"><p className="pixel-score text-amber-300">{remaining}</p><p className="pixel-caption">DIAS RESTANTES</p></div>
+        </div>
+        <div className="relative z-10 px-0 pb-5">
           <div className="journey-scroll px-6 pb-4 pt-8">
             <div className="journey-track" style={{ "--journey-days": days.length } as CSSProperties}>
               {days.map((day, index) => (
                 <div key={day.date} className="journey-step" style={{ "--wave": `${Math.sin(index * 0.52) * 18}px` } as CSSProperties}>
+                  {(index % 7 === 0 || index === days.length - 1) && <div className={cn("journey-landmark", `prop-${(Math.floor(index / 7) % 7) + 1}`, day.status)} aria-hidden="true" />}
                   <div className={cn("journey-stone", day.status, day.date === today && "today")} title={`${formatJourneyDate(day.date)} · ${day.score}%`}>
                     <span>{index + 1}</span>
                   </div>
@@ -596,10 +529,33 @@ function JourneyPath({ days, today, goal }: { days: JourneyDay[]; today: string;
             </div>
           </div>
           <div className="journey-legend mx-6"><span className="perfect">Vitória</span><span className="partial">Parcial</span><span className="missed">Cicatriz</span><span className="future">Não construído</span></div>
-        </CardContent>
-      </Card>
+        </div>
     </section>
   );
+}
+
+function TrophyCeremony({ open, trophyCount, goal, onClose }: { open: boolean; trophyCount: number; goal: string; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <motion.div className="trophy-ceremony fixed inset-0 z-[100] grid place-items-center overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="Cerimônia de troféu">
+      <div className="ceremony-sparks" aria-hidden="true">{Array.from({ length: 48 }, (_, index) => <i key={index} style={{ "--spark": index } as CSSProperties} />)}</div>
+      <motion.div className="ceremony-shrine" initial={{ scale: .3, y: 90, rotate: -8 }} animate={{ scale: 1, y: 0, rotate: 0 }} transition={{ type: "spring", stiffness: 130, damping: 13 }} onClick={(event) => event.stopPropagation()}>
+        <div className="ceremony-prop" aria-hidden="true" />
+        <motion.div className="ceremony-trophy" animate={{ y: [0, -13, 0], filter: ["brightness(1)", "brightness(1.55)", "brightness(1)"] }} transition={{ duration: 1.7, repeat: Infinity }}><HugeiconsIcon icon={Award01Icon} size={64} /></motion.div>
+        <p className="pixel-caption text-amber-300">SEMANA CONQUISTADA</p>
+        <h2 className="pixel-heading mt-4 text-amber-50">TROFÉU DESPERTADO</h2>
+        <p className="mt-3 text-sm text-amber-100/65">{Math.max(1, trophyCount)} selo(s) no caminho de {goal}</p>
+        <Button className="ceremony-button mt-6" onClick={onClose}>CONTINUAR JORNADA</Button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function launchTrophyBurst() {
+  const colors = ["#facc15", "#fff7cc", "#34d399", "#a78bfa"];
+  confetti({ particleCount: 180, spread: 110, startVelocity: 54, origin: { y: .68 }, colors, disableForReducedMotion: true });
+  window.setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0, y: .72 }, colors, disableForReducedMotion: true }), 280);
+  window.setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1, y: .72 }, colors, disableForReducedMotion: true }), 420);
 }
 
 function buildWeek(weekStart: string, today: string, pillars: Pillar[], checkins: DashboardState["checkins"]) {

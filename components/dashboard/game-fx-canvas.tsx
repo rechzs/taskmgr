@@ -84,21 +84,6 @@ export function GameFxCanvas({ variant, className }: GameFxCanvasProps) {
           })
         : [];
 
-      const windTrails = variant === "hero"
-        ? Array.from({ length: 3 }, () => {
-            const trail = new Graphics();
-            app.stage.addChild(trail);
-            return trail;
-          })
-        : [];
-
-      const scarfBack = variant === "hero" ? new Graphics() : null;
-      const scarfFront = variant === "hero" ? new Graphics() : null;
-      if (scarfBack && scarfFront) {
-        app.stage.addChild(scarfBack);
-        app.stage.addChild(scarfFront);
-      }
-
       let elapsed = 0;
       app.ticker.add((ticker) => {
         const delta = Math.min(ticker.deltaMS / 1000, 0.05);
@@ -127,52 +112,6 @@ export function GameFxCanvas({ variant, className }: GameFxCanvasProps) {
             .stroke({ color: index % 2 ? 0x8b5cf6 : 0x6ee7b7, width: 24 + index * 7, alpha: 0.09 });
         });
 
-        windTrails.forEach((trail, index) => {
-          const cycle = (elapsed * (0.12 + index * 0.025) + index * 0.31) % 1;
-          const startX = -width * 0.25 + cycle * width * 1.45;
-          const y = height * (0.3 + index * 0.21) + Math.sin(elapsed * 1.2 + index) * 14;
-          const length = width * (0.2 + index * 0.055);
-          trail.clear()
-            .moveTo(startX, y)
-            .bezierCurveTo(startX + length * 0.28, y - 16, startX + length * 0.7, y + 12, startX + length, y - 4)
-            .stroke({ color: index === 1 ? 0xa78bfa : 0x9fffd8, width: index === 1 ? 1 : 2, alpha: Math.sin(cycle * Math.PI) * 0.28 });
-        });
-
-        if (scarfBack && scarfFront) {
-          const headX = width * 0.645;
-          const headY = height * 0.265;
-          const waistX = width * 0.615;
-          const waistY = height * 0.59;
-          const gust = Math.sin(elapsed * 1.9) * 18;
-          const wave = Math.sin(elapsed * 2.8) * 10;
-
-          scarfBack.clear()
-            .moveTo(headX, headY)
-            .bezierCurveTo(width * 0.57, headY - 18 + wave, width * 0.45, headY + 8 - wave, width * 0.34 + gust, headY - 7)
-            .bezierCurveTo(width * 0.42, headY + 22 - wave, width * 0.57, headY + 10 + wave, headX, headY + 8)
-            .closePath()
-            .fill({ color: 0x171528, alpha: 0.98 })
-            .moveTo(headX - 3, headY + 6)
-            .bezierCurveTo(width * 0.55, headY + 7 - wave, width * 0.44, headY + 35 + wave, width * 0.37 - gust * 0.35, headY + 24)
-            .bezierCurveTo(width * 0.45, headY + 44 + wave, width * 0.56, headY + 21 - wave, headX, headY + 13)
-            .closePath()
-            .fill({ color: 0x28233f, alpha: 0.94 });
-
-          scarfFront.clear()
-            .moveTo(waistX, waistY)
-            .bezierCurveTo(width * 0.54, waistY - 7 + wave * 0.45, width * 0.43, waistY + 8 - wave * 0.4, width * 0.31 + gust, waistY - 1)
-            .bezierCurveTo(width * 0.4, waistY + 20 - wave * 0.35, width * 0.54, waistY + 13 + wave * 0.4, waistX, waistY + 8)
-            .closePath()
-            .fill({ color: 0x063b32, alpha: 0.92 })
-            .moveTo(waistX - 4, waistY + 9)
-            .bezierCurveTo(width * 0.55, waistY + 14 - wave * 0.45, width * 0.47, waistY + 34 + wave * 0.55, width * 0.39 - gust * 0.25, waistY + 26)
-            .bezierCurveTo(width * 0.46, waistY + 39 + wave * 0.35, width * 0.55, waistY + 25 - wave * 0.45, waistX - 1, waistY + 15)
-            .closePath()
-            .fill({ color: 0x0a5a49, alpha: 0.88 })
-            .moveTo(waistX, waistY + 2)
-            .bezierCurveTo(width * 0.53, waistY - 4 + wave * 0.4, width * 0.42, waistY + 13 - wave * 0.35, width * 0.31 + gust, waistY + 3)
-            .stroke({ color: 0x51b79d, width: 1, alpha: 0.38 });
-        }
       });
 
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
