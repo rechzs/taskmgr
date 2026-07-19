@@ -1,5 +1,5 @@
-import { RpgDashboard } from "@/components/dashboard/rpg-dashboard";
+import { GameShell } from "@/components/game/game-shell";
 
 export default function Home() {
-  return <RpgDashboard />;
+  return <GameShell />;
 }

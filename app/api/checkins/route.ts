@@ -32,11 +32,11 @@ export async function POST(request: Request) {
           updated_at = NOW()
     `;
 
-    if (dayOfWeek === 0) {
-      await reconcileWeeklyAward(payload.day, pillars);
-    }
+    const trophyAwarded = dayOfWeek === 0
+      ? await reconcileWeeklyAward(payload.day, pillars)
+      : false;
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, trophyAwarded });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return Response.json({ error: "Check-in inválido." }, { status: 400 });
@@ -57,6 +57,11 @@ async function reconcileWeeklyAward(sunday: string, pillars: { id: number; requi
   const byDay = new Map(rows.map((row) => [row.day, new Set(row.completedPillarIds)]));
   let required = 0;
   let completed = 0;
+  const existing = await sql<{ awarded: boolean }[]>`
+    SELECT EXISTS(
+      SELECT 1 FROM weekly_awards WHERE week_start = ${weekStart}::date
+    ) AS awarded
+  `;
 
   for (let offset = 0; offset < 7; offset += 1) {
     const day = addDays(weekStart, offset);
@@ -75,8 +80,10 @@ async function reconcileWeeklyAward(sunday: string, pillars: { id: number; requi
       SELECT ${weekStart}::date, 100, final_goal FROM app_settings WHERE id = 1
       ON CONFLICT (week_start) DO UPDATE SET score = 100
     `;
+    return !(existing[0]?.awarded ?? false);
   } else {
     await sql`DELETE FROM weekly_awards WHERE week_start = ${weekStart}::date`;
+    return false;
   }
 }
 
