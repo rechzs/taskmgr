@@ -62,9 +62,9 @@ export class TrophyScene extends Phaser.Scene {
       .setScale(compact ? 0.34 : 0.46).setTint(0xffe8a5).setAlpha(0).setDepth(20);
     const ninjaX = width * (compact ? 0.2 : 0.23);
     const ninjaY = height * 0.82;
-    const ninjaLight = this.add.circle(ninjaX, ninjaY - (compact ? 54 : 78), compact ? 78 : 112, COLORS.jade, 0)
+    const ninjaLight = this.add.circle(ninjaX, ninjaY - (compact ? 54 : 78), compact ? 78 : 112, COLORS.jade, 0.16)
       .setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
-    const ninja = new NinjaRig(this, ninjaX, ninjaY, compact ? 0.6 : 0.78).setAlpha(0).setDepth(22);
+    const ninja = new NinjaRig(this, ninjaX, ninjaY, compact ? 0.6 : 0.78).setAlpha(0.94).setDepth(22);
 
     this.add.text(width / 2, compact ? 34 : 42, "CERIMÔNIA DO TROFÉU", {
       fontFamily: PIXEL_FONT, fontSize: compact ? "11px" : "17px", color: "#ffe9ae", stroke: "#4d2d07", strokeThickness: 7,
@@ -100,8 +100,8 @@ export class TrophyScene extends Phaser.Scene {
       this.cameras.main.shake(reduced ? 0 : 420, 0.005);
       this.tweens.add({ targets: light, alpha: 0.48, scale: 1.45, duration: reduced ? 0 : 750, ease: "Sine.easeOut" });
       this.tweens.add({ targets: trophy, alpha: 1, y: trophy.y - 24, scale: trophy.scale * 1.12, duration: reduced ? 0 : 850, ease: "Back.easeOut" });
-      this.tweens.add({ targets: ninja, alpha: 1, x: width * (compact ? 0.25 : 0.31), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
-      this.tweens.add({ targets: ninjaLight, alpha: 0.24, x: width * (compact ? 0.25 : 0.31), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
+      this.tweens.add({ targets: ninja, alpha: 1, x: width * (compact ? 0.28 : 0.32), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
+      this.tweens.add({ targets: ninjaLight, alpha: 0.3, x: width * (compact ? 0.28 : 0.32), duration: reduced ? 0 : 650, ease: "Cubic.easeOut" });
       this.tweens.add({ targets: subtitle, alpha: 1, duration: reduced ? 0 : 650, delay: reduced ? 0 : 400 });
       ninja.celebrate();
     });

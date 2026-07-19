@@ -73,10 +73,15 @@ export class JourneyScene extends Phaser.Scene {
       if (dayIndex % 7 === 6 || dayIndex === totalDays - 1) {
         const week = Math.floor(dayIndex / 7);
         const propFrame = `landmark-${week % 7}`;
+        this.add.circle(point.x, point.y - (compact ? 24 : 31), compact ? 18 : 25,
+          state === "future" ? 0x43554d : state === "missed" ? 0x8f3f45 : COLORS.jade,
+          state === "future" ? 0.1 : 0.18)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setDepth(5);
         const landmark = this.add.image(point.x, point.y - (compact ? 24 : 31), "world-props", propFrame)
           .setScale(compact ? 0.105 : 0.15)
           .setDepth(6)
-          .setTint(state === "future" ? 0x4a5651 : state === "missed" ? 0x8d5b5b : 0xb8ead3)
+          .setTint(state === "future" ? 0x596b63 : state === "missed" ? 0xb66c70 : 0xe0fff0)
           .setAlpha(state === "future" ? 0.45 : 0.9);
         this.add.text(point.x, point.y + (compact ? 13 : 17), `${week + 1} · ${LANDMARK_NAMES[week % LANDMARK_NAMES.length]}`, {
           fontFamily: PIXEL_FONT, fontSize: compact ? "4px" : "6px", color: state === "future" ? "#52615a" : "#a7bdb2",
