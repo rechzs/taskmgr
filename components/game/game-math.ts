@@ -2,6 +2,7 @@ import type { Checkin, Pillar } from "@/lib/types";
 
 export const JOURNEY_START = "2026-07-19";
 export const JOURNEY_END = "2026-11-01";
+export const GAME_TIME_ZONE = "America/Sao_Paulo";
 export const WEEK_DAYS = [
   { short: "SEG", full: "Segunda", js: 1 },
   { short: "TER", full: "Terça", js: 2 },
@@ -13,15 +14,20 @@ export const WEEK_DAYS = [
 ] as const;
 
 export function toLocalDate(date: Date) {
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: GAME_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 export function startOfWeek(date: Date) {
-  const copy = new Date(date);
-  const day = copy.getDay();
-  copy.setDate(copy.getDate() - ((day + 6) % 7));
-  copy.setHours(12, 0, 0, 0);
+  const copy = new Date(`${toLocalDate(date)}T12:00:00Z`);
+  const day = copy.getUTCDay();
+  copy.setUTCDate(copy.getUTCDate() - ((day + 6) % 7));
   return copy;
 }
 

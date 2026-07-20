@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { countPathTransforms, deriveWorldState, isPerfectWeek } from "../components/game/game-state.ts";
+import { startOfWeek, toLocalDate } from "../components/game/game-math.ts";
 import type { Checkin, Pillar } from "../lib/types.ts";
 
 const pillars: Pillar[] = [
@@ -53,4 +54,10 @@ test("recarregar o mesmo snapshot reconstrói o mesmo estado do mundo", () => {
   const beforeReload = deriveWorldState("2026-07-20", pillars, checkins);
   const afterReload = deriveWorldState("2026-07-20", structuredClone(pillars), structuredClone(checkins));
   assert.deepEqual(afterReload, beforeReload);
+});
+
+test("o dia do jogo respeita São Paulo durante a fronteira UTC", () => {
+  const afterUtcMidnight = new Date("2026-07-20T00:30:00.000Z");
+  assert.equal(toLocalDate(afterUtcMidnight), "2026-07-19");
+  assert.equal(toLocalDate(startOfWeek(afterUtcMidnight)), "2026-07-13");
 });
