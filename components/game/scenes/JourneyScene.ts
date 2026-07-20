@@ -3,7 +3,7 @@ import { gameBus } from "@/components/game/event-bus";
 import { addDays, daysBetween, JOURNEY_END, JOURNEY_START, journeyDayState } from "@/components/game/game-math";
 import { COLORS, makePixelButton, PIXEL_FONT, playRuneSound } from "@/components/game/scenes/scene-utils";
 
-const LANDMARK_NAMES = ["CASA", "PONTE", "PORTAL", "FORJA", "TEMPLO", "TORRE", "SANTUÁRIO"];
+const LANDMARKS = ["CASA", "PONTE", "PORTAL", "FORJA", "TEMPLO", "TORRE", "SANTUÁRIO"];
 
 export class JourneyScene extends Phaser.Scene {
   private dragging = false;
@@ -21,95 +21,149 @@ export class JourneyScene extends Phaser.Scene {
     const compact = width < 680;
     const totalDays = daysBetween(JOURNEY_START, JOURNEY_END) + 1;
     const weekCount = Math.ceil(totalDays / 7);
-    const rowHeight = compact ? 70 : 92;
-    const top = compact ? 132 : 150;
-    const contentHeight = top + weekCount * rowHeight + 110;
+    const rowHeight = compact ? 104 : 126;
+    const top = compact ? 142 : 168;
+    const contentHeight = Math.max(height, top + weekCount * rowHeight + 150);
 
-    this.cameras.main.setBackgroundColor(0x020706).setBounds(0, 0, width, Math.max(contentHeight, height));
-    const background = this.add.tileSprite(0, 0, width, contentHeight, "dojo-world")
-      .setOrigin(0).setTint(0x1c3730).setAlpha(0.22).setScrollFactor(0.2);
-    background.tileScaleX = compact ? 0.75 : 1;
-    background.tileScaleY = compact ? 0.75 : 1;
+    this.cameras.main.setBackgroundColor(0x050a0e).setBounds(0, 0, width, contentHeight);
+    const background = this.add.image(width / 2, contentHeight / 2, "kage-world-base").setDisplaySize(width * 1.8, contentHeight).setTint(0x243449).setAlpha(0.15).setDepth(-20);
+    void background;
+    this.add.rectangle(width / 2, contentHeight / 2, width, contentHeight, 0x020708, 0.72).setDepth(-10);
 
-    const veil = this.add.graphics().fillStyle(0x020605, 0.76).fillRect(0, 0, width, contentHeight).setDepth(-1);
-    void veil;
-    this.add.text(compact ? 14 : width / 2, 30, compact ? "CAMINHO AO DESTINO" : "CAMINHO ATÉ O DESTINO", {
-      fontFamily: PIXEL_FONT, fontSize: compact ? "9px" : "17px", color: "#d7ffe9",
-      stroke: "#063d30", strokeThickness: 7, align: "center",
+    this.add.text(compact ? 14 : width / 2, 34, "CAMINHO ATÉ 01·11·2026", {
+      fontFamily: PIXEL_FONT, fontSize: compact ? "8px" : "15px", color: "#e9e2cf", stroke: "#111814", strokeThickness: 7,
     }).setOrigin(compact ? 0 : 0.5, 0.5).setScrollFactor(0).setDepth(100);
-    this.add.text(width / 2, compact ? 58 : 64, `CAPÍTULOS · ${JOURNEY_START.split("-").reverse().join("/")} → 01/11/2026`, {
-      fontFamily: PIXEL_FONT, fontSize: compact ? "6px" : "8px", color: "#9d8670",
+    this.add.text(width / 2, compact ? 68 : 72, "15 CAPÍTULOS · SEGUNDA → DOMINGO", {
+      fontFamily: PIXEL_FONT, fontSize: compact ? "5px" : "7px", color: "#a8a28f",
     }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
-    const left = compact ? 42 : Math.max(88, width * 0.12);
+    const left = compact ? 34 : Math.max(82, width * 0.11);
     const right = width - left;
     const step = (right - left) / 6;
-    const path = this.add.graphics().setDepth(4);
     const points: Phaser.Geom.Point[] = [];
+
     for (let dayIndex = 0; dayIndex < totalDays; dayIndex += 1) {
       const week = Math.floor(dayIndex / 7);
-      const withinWeek = dayIndex % 7;
-      const direction = week % 2 === 0 ? 1 : -1;
-      const x = direction === 1 ? left + withinWeek * step : right - withinWeek * step;
+      const within = dayIndex % 7;
+      const forward = week % 2 === 0;
+      const x = forward ? left + within * step : right - within * step;
       const y = top + week * rowHeight;
       points.push(new Phaser.Geom.Point(x, y));
     }
-    path.lineStyle(compact ? 5 : 7, 0x10241d, 1).strokePoints(points, false, false);
-    path.lineStyle(2, 0x376c55, 0.5).strokePoints(points, false, false);
 
-    points.forEach((point, dayIndex) => {
-      const date = addDays(JOURNEY_START, dayIndex);
+    points.forEach((point, index) => {
+      const date = addDays(JOURNEY_START, index);
       const state = snapshot ? journeyDayState(date, snapshot.today, snapshot.state.pillars, snapshot.state.checkins) : "future";
-      const color = state === "perfect" ? COLORS.jade : state === "missed" ? COLORS.danger : state === "current" ? COLORS.amber : state === "rest" ? 0x718077 : 0x27342f;
-      const radius = state === "current" ? (compact ? 7 : 9) : compact ? 4 : 5;
-      const node = this.add.circle(point.x, point.y, radius, color, state === "future" ? 0.38 : 0.95).setDepth(8);
-      if (state === "perfect") node.setStrokeStyle(2, 0xb9ffe5, 0.75);
-      if (state === "current") {
-        node.setStrokeStyle(3, 0xffe4a6, 0.95);
-        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          this.tweens.add({ targets: node, scale: 1.55, alpha: 0.55, duration: 760, yoyo: true, repeat: -1 });
-        }
+      this.drawPhysicalSegment(point, index, state, compact);
+
+      if (index % 7 === 6 || index === totalDays - 1) {
+        const week = Math.floor(index / 7);
+        this.drawLandmark(point.x, point.y - (compact ? 39 : 48), week, state, compact);
       }
-      if (dayIndex % 7 === 6 || dayIndex === totalDays - 1) {
-        const week = Math.floor(dayIndex / 7);
-        const propFrame = `landmark-${week % 7}`;
-        this.add.circle(point.x, point.y - (compact ? 24 : 31), compact ? 18 : 25,
-          state === "future" ? 0x43554d : state === "missed" ? 0x8f3f45 : COLORS.jade,
-          state === "future" ? 0.1 : 0.18)
-          .setBlendMode(Phaser.BlendModes.ADD)
-          .setDepth(5);
-        const landmark = this.add.image(point.x, point.y - (compact ? 24 : 31), "world-props", propFrame)
-          .setScale(compact ? 0.105 : 0.15)
-          .setDepth(6)
-          .setTint(state === "future" ? 0x596b63 : state === "missed" ? 0xb66c70 : 0xe0fff0)
-          .setAlpha(state === "future" ? 0.45 : 0.9);
-        this.add.text(point.x, point.y + (compact ? 13 : 17), `${week + 1} · ${LANDMARK_NAMES[week % LANDMARK_NAMES.length]}`, {
-          fontFamily: PIXEL_FONT, fontSize: compact ? "4px" : "6px", color: state === "future" ? "#52615a" : "#a7bdb2",
-        }).setOrigin(0.5, 0).setDepth(9);
-        landmark.setInteractive({ useHandCursor: true }).on("pointerup", () => {
-          playRuneSound(this);
-          this.cameras.main.pan(point.x, point.y, 280, "Cubic.easeOut");
-        });
-      }
-      if (dayIndex % 28 === 0) {
-        const chapter = Math.floor(dayIndex / 28) + 1;
-        this.add.text(width / 2, point.y - rowHeight * 0.48, `CAPÍTULO ${String(chapter).padStart(2, "0")}`, {
-          fontFamily: PIXEL_FONT, fontSize: compact ? "6px" : "8px", color: "#8f7ac4",
-        }).setOrigin(0.5).setDepth(7);
+
+      if (index > 0 && index % 7 === 0) {
+        const previous = points[index - 1];
+        this.drawWeekTurn(previous, point, state, compact);
       }
     });
 
-    const endPoint = points.at(-1)!;
-    this.add.image(endPoint.x, endPoint.y - (compact ? 42 : 55), "relics", "relic-5")
-      .setScale(compact ? 0.12 : 0.17).setTint(0xffe091).setDepth(18);
-    this.add.text(endPoint.x, endPoint.y + 27, snapshot?.state.settings.finalGoal ?? "UFPR", {
-      fontFamily: PIXEL_FONT, fontSize: compact ? "7px" : "9px", color: "#ffe7a8", stroke: "#3d2206", strokeThickness: 5,
-    }).setOrigin(0.5).setDepth(20);
+    const final = points.at(-1)!;
+    this.drawTrophy(final.x, final.y - (compact ? 72 : 88), compact);
+    this.add.text(final.x, final.y + (compact ? 31 : 39), snapshot?.state.settings.finalGoal ?? "UFPR", {
+      fontFamily: PIXEL_FONT, fontSize: compact ? "6px" : "8px", color: "#ffe4a3", stroke: "#241702", strokeThickness: 5,
+    }).setOrigin(0.5).setDepth(30);
 
-    makePixelButton(this, width - (compact ? 70 : 96), 38, "VOLTAR", () => this.close(), COLORS.amber)
-      .setScrollFactor(0).setDepth(120);
+    makePixelButton(this, width - (compact ? 68 : 92), 42, "VOLTAR", () => this.close(), COLORS.amber).setScrollFactor(0).setDepth(120);
+    this.bindCamera(contentHeight, height);
+
+    if (snapshot) {
+      const currentIndex = Phaser.Math.Clamp(daysBetween(JOURNEY_START, snapshot.today), 0, totalDays - 1);
+      this.cameras.main.scrollY = Phaser.Math.Clamp(points[currentIndex].y - height * 0.48, 0, Math.max(0, contentHeight - height));
+    }
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.removeAllListeners();
+      this.input.keyboard?.removeAllListeners();
+    });
+  }
+
+  private drawPhysicalSegment(point: Phaser.Geom.Point, index: number, state: ReturnType<typeof journeyDayState>, compact: boolean) {
+    const graphics = this.add.graphics().setDepth(10);
+    const width = compact ? 25 : 36;
+    const height = compact ? 11 : 15;
+    const colors = {
+      perfect: [0x8a826d, 0xe0d29e], missed: [0x45383b, 0x76545a], current: [0x8a6a32, 0xffd47c],
+      rest: [0x4d6258, 0x81968b], future: [0x252e2c, 0x3e4b47],
+    } as const;
+    const [fill, edge] = colors[state];
+
+    if (index % 7 === 2 || index % 7 === 5) {
+      for (let plank = -1; plank <= 1; plank += 1) {
+        graphics.fillStyle(fill, state === "future" ? 0.48 : 0.98).lineStyle(1, edge, 0.8)
+          .fillRect(point.x - width / 2, point.y + plank * (height / 3) - 2, width, 4).strokeRect(point.x - width / 2, point.y + plank * (height / 3) - 2, width, 4);
+      }
+    } else {
+      const skew = index % 2 ? 3 : -3;
+      graphics.fillStyle(fill, state === "future" ? 0.45 : 0.98).lineStyle(2, edge, 0.75);
+      graphics.fillPoints([
+        new Phaser.Geom.Point(point.x - width / 2 + skew, point.y - height / 2),
+        new Phaser.Geom.Point(point.x + width / 2, point.y - height / 2 + 2),
+        new Phaser.Geom.Point(point.x + width / 2 - skew, point.y + height / 2),
+        new Phaser.Geom.Point(point.x - width / 2, point.y + height / 2 - 2),
+      ], true).strokePath();
+    }
+
+    if (state === "perfect") {
+      graphics.lineStyle(1, 0xf0d98d, 0.75).beginPath().moveTo(point.x - 4, point.y).lineTo(point.x, point.y - 3).lineTo(point.x + 4, point.y).lineTo(point.x, point.y + 3).strokePath();
+    } else if (state === "missed") {
+      graphics.lineStyle(1, 0x1b1418, 0.9).beginPath().moveTo(point.x - 5, point.y - 4).lineTo(point.x + 1, point.y).lineTo(point.x - 2, point.y + 5).strokePath();
+    }
+
+    const hit = this.add.zone(point.x, point.y, width + 10, height + 18).setInteractive({ useHandCursor: true }).setDepth(20);
+    hit.on("pointerover", () => graphics.setScale(1.12));
+    hit.on("pointerout", () => graphics.setScale(1));
+  }
+
+  private drawWeekTurn(previous: Phaser.Geom.Point, next: Phaser.Geom.Point, state: ReturnType<typeof journeyDayState>, compact: boolean) {
+    const graphics = this.add.graphics().setDepth(8);
+    const steps = compact ? 5 : 6;
+    for (let step = 1; step <= steps; step += 1) {
+      const y = Phaser.Math.Linear(previous.y, next.y, step / (steps + 1));
+      const width = (compact ? 22 : 30) - step * 1.2;
+      graphics.fillStyle(state === "future" ? 0x25302d : 0x625f52, state === "future" ? 0.42 : 0.9)
+        .lineStyle(1, state === "future" ? 0x3b4944 : 0x9d9580, 0.65)
+        .fillRect(previous.x - width / 2, y - 3, width, 6).strokeRect(previous.x - width / 2, y - 3, width, 6);
+    }
+  }
+
+  private drawLandmark(x: number, y: number, week: number, state: ReturnType<typeof journeyDayState>, compact: boolean) {
+    const complete = state === "perfect";
+    const color = complete ? 0xc7aa62 : state === "missed" ? 0x78565c : 0x4c5b56;
+    const building = this.add.graphics().setDepth(15);
+    const scale = compact ? 0.75 : 1;
+    building.fillStyle(0x111716, 1).lineStyle(2, color, complete ? 0.95 : 0.58);
+    building.fillTriangle(x - 19 * scale, y - 4 * scale, x, y - 20 * scale, x + 19 * scale, y - 4 * scale);
+    building.fillRect(x - 15 * scale, y - 4 * scale, 30 * scale, 22 * scale).strokeRect(x - 15 * scale, y - 4 * scale, 30 * scale, 22 * scale);
+    building.fillStyle(color, complete ? 0.9 : 0.3).fillRect(x - 4 * scale, y + 4 * scale, 8 * scale, 14 * scale);
+    this.add.text(x, y + (compact ? 24 : 29), `${String(week + 1).padStart(2, "0")} · ${LANDMARKS[week % LANDMARKS.length]}`, {
+      fontFamily: PIXEL_FONT, fontSize: compact ? "4px" : "5px", color: complete ? "#d9c58e" : "#77847e",
+    }).setOrigin(0.5).setDepth(18);
+  }
+
+  private drawTrophy(x: number, y: number, compact: boolean) {
+    const scale = compact ? 0.72 : 1;
+    const trophy = this.add.graphics().setDepth(25);
+    trophy.fillStyle(0xe0b550, 1).lineStyle(2, 0xffe5a1, 0.9);
+    trophy.fillPoints([
+      new Phaser.Geom.Point(x - 12 * scale, y - 14 * scale), new Phaser.Geom.Point(x + 12 * scale, y - 14 * scale),
+      new Phaser.Geom.Point(x + 8 * scale, y + 3 * scale), new Phaser.Geom.Point(x + 3 * scale, y + 8 * scale),
+      new Phaser.Geom.Point(x + 3 * scale, y + 16 * scale), new Phaser.Geom.Point(x + 10 * scale, y + 19 * scale),
+      new Phaser.Geom.Point(x - 10 * scale, y + 19 * scale), new Phaser.Geom.Point(x - 3 * scale, y + 16 * scale),
+      new Phaser.Geom.Point(x - 3 * scale, y + 8 * scale), new Phaser.Geom.Point(x - 8 * scale, y + 3 * scale),
+    ], true).strokePath();
+  }
+
+  private bindCamera(contentHeight: number, viewportHeight: number) {
     this.input.keyboard?.once("keydown-ESC", () => this.close());
-
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       this.dragging = true;
       this.dragStartY = pointer.y;
@@ -117,21 +171,11 @@ export class JourneyScene extends Phaser.Scene {
     });
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (!this.dragging) return;
-      this.cameras.main.scrollY = Phaser.Math.Clamp(this.cameraStartY + this.dragStartY - pointer.y, 0, Math.max(0, contentHeight - height));
+      this.cameras.main.scrollY = Phaser.Math.Clamp(this.cameraStartY + this.dragStartY - pointer.y, 0, Math.max(0, contentHeight - viewportHeight));
     });
     this.input.on("pointerup", () => { this.dragging = false; });
     this.input.on("wheel", (_pointer: Phaser.Input.Pointer, _objects: unknown, _dx: number, dy: number) => {
-      this.cameras.main.scrollY = Phaser.Math.Clamp(this.cameras.main.scrollY + dy * 0.45, 0, Math.max(0, contentHeight - height));
-    });
-
-    if (snapshot) {
-      const currentIndex = Phaser.Math.Clamp(daysBetween(JOURNEY_START, snapshot.today), 0, totalDays - 1);
-      const currentPoint = points[currentIndex];
-      this.cameras.main.scrollY = Phaser.Math.Clamp(currentPoint.y - height * 0.48, 0, Math.max(0, contentHeight - height));
-    }
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.removeAllListeners();
-      this.input.keyboard?.removeAllListeners();
+      this.cameras.main.scrollY = Phaser.Math.Clamp(this.cameras.main.scrollY + dy * 0.45, 0, Math.max(0, contentHeight - viewportHeight));
     });
   }
 

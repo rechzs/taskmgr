@@ -32,23 +32,12 @@ export class PreloadScene extends Phaser.Scene {
       bar.destroy();
     });
 
-    this.load.image("dojo-world", "/dojo-world.png");
-    this.load.image("world-props", "/kage-world-props.png");
-    this.load.image("relics", "/kage-relics.png");
-    this.load.spritesheet("ninja-parts", "/ninja-parts-atlas.png", { frameWidth: 362, frameHeight: 362 });
+    this.load.image("kage-world-base", "/kage-world-base.png");
+    this.load.spritesheet("ninja-actions-a", "/ninja-actions-a.png", { frameWidth: 313, frameHeight: 313 });
+    this.load.spritesheet("ninja-actions-b", "/ninja-actions-b.png", { frameWidth: 313, frameHeight: 418 });
   }
 
   create() {
-    const props = this.textures.get("world-props");
-    const propWidth = 443;
-    const propHeight = 443;
-    for (let index = 0; index < 8; index += 1) {
-      props.add(`landmark-${index}`, 0, (index % 4) * propWidth, Math.floor(index / 4) * propHeight, propWidth, propHeight);
-    }
-    const relics = this.textures.get("relics");
-    for (let index = 0; index < 6; index += 1) {
-      relics.add(`relic-${index}`, 0, (index % 3) * 512, Math.floor(index / 3) * 512, 512, 512);
-    }
     this.scene.start("WorldScene");
   }
 }

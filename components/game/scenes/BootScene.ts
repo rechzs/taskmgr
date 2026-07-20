@@ -30,6 +30,17 @@ export class BootScene extends Phaser.Scene {
       graphics.fillStyle(COLORS.jade, 0.14).fillCircle(16, 16, 10);
       graphics.fillStyle(COLORS.jadeSoft, 0.75).fillCircle(16, 16, 3);
     });
+    this.makeTexture("particle-smoke", 18, (graphics) => {
+      graphics.fillStyle(0xb8b0a0, 0.12).fillCircle(9, 9, 9);
+      graphics.fillStyle(0x756f66, 0.2).fillCircle(8, 10, 5);
+    });
+    this.makeTexture("particle-metal", 10, (graphics) => {
+      graphics.fillStyle(0xf6d788, 1).fillTriangle(1, 8, 5, 1, 9, 7);
+      graphics.lineStyle(1, 0xffffff, 0.8).lineBetween(5, 2, 8, 7);
+    });
+    this.makeTexture("particle-dust", 6, (graphics) => {
+      graphics.fillStyle(0xc5ad81, 0.55).fillCircle(3, 3, 3);
+    });
     this.scene.start("PreloadScene");
   }
 

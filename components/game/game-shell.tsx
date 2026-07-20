@@ -88,7 +88,7 @@ export function GameShell() {
       const updated = await loadState();
       gameBus.emit("react:mission-saved", {
         completedPillarIds: selected,
-        allComplete: todayPillars.length > 0 && selected.length === todayPillars.length,
+        allComplete: todayPillars.length > 0 && todayPillars.every((pillar) => selected.includes(pillar.id)),
         trophyAwarded: Boolean(result.trophyAwarded || (updated && updated.stats.trophies > beforeTrophies)),
       });
     } catch {
