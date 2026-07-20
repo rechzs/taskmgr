@@ -26,9 +26,9 @@ export class JourneyScene extends Phaser.Scene {
     const contentHeight = Math.max(height, top + weekCount * rowHeight + 150);
 
     this.cameras.main.setBackgroundColor(0x050a0e).setBounds(0, 0, width, contentHeight);
-    const background = this.add.image(width / 2, contentHeight / 2, "kage-world-base").setDisplaySize(width * 1.8, contentHeight).setTint(0x243449).setAlpha(0.15).setDepth(-20);
+    const background = this.add.image(width / 2, contentHeight / 2, "kage-world-base").setDisplaySize(width * 1.8, contentHeight).setTint(0x4b6070).setAlpha(0.27).setDepth(-20);
     void background;
-    this.add.rectangle(width / 2, contentHeight / 2, width, contentHeight, 0x020708, 0.72).setDepth(-10);
+    this.add.rectangle(width / 2, contentHeight / 2, width, contentHeight, 0x020708, 0.48).setDepth(-10);
 
     this.add.text(compact ? 14 : width / 2, 34, "CAMINHO ATÉ 01·11·2026", {
       fontFamily: PIXEL_FONT, fontSize: compact ? "8px" : "15px", color: "#e9e2cf", stroke: "#111814", strokeThickness: 7,
@@ -92,18 +92,18 @@ export class JourneyScene extends Phaser.Scene {
     const height = compact ? 11 : 15;
     const colors = {
       perfect: [0x8a826d, 0xe0d29e], missed: [0x45383b, 0x76545a], current: [0x8a6a32, 0xffd47c],
-      rest: [0x4d6258, 0x81968b], future: [0x252e2c, 0x3e4b47],
+      rest: [0x4d6258, 0x81968b], future: [0x34423e, 0x66746e],
     } as const;
     const [fill, edge] = colors[state];
 
     if (index % 7 === 2 || index % 7 === 5) {
       for (let plank = -1; plank <= 1; plank += 1) {
-        graphics.fillStyle(fill, state === "future" ? 0.48 : 0.98).lineStyle(1, edge, 0.8)
+        graphics.fillStyle(fill, state === "future" ? 0.72 : 0.98).lineStyle(1, edge, 0.8)
           .fillRect(point.x - width / 2, point.y + plank * (height / 3) - 2, width, 4).strokeRect(point.x - width / 2, point.y + plank * (height / 3) - 2, width, 4);
       }
     } else {
       const skew = index % 2 ? 3 : -3;
-      graphics.fillStyle(fill, state === "future" ? 0.45 : 0.98).lineStyle(2, edge, 0.75);
+      graphics.fillStyle(fill, state === "future" ? 0.7 : 0.98).lineStyle(2, edge, 0.78);
       graphics.fillPoints([
         new Phaser.Geom.Point(point.x - width / 2 + skew, point.y - height / 2),
         new Phaser.Geom.Point(point.x + width / 2, point.y - height / 2 + 2),
@@ -129,7 +129,7 @@ export class JourneyScene extends Phaser.Scene {
     for (let step = 1; step <= steps; step += 1) {
       const y = Phaser.Math.Linear(previous.y, next.y, step / (steps + 1));
       const width = (compact ? 22 : 30) - step * 1.2;
-      graphics.fillStyle(state === "future" ? 0x25302d : 0x625f52, state === "future" ? 0.42 : 0.9)
+      graphics.fillStyle(state === "future" ? 0x34423e : 0x625f52, state === "future" ? 0.68 : 0.9)
         .lineStyle(1, state === "future" ? 0x3b4944 : 0x9d9580, 0.65)
         .fillRect(previous.x - width / 2, y - 3, width, 6).strokeRect(previous.x - width / 2, y - 3, width, 6);
     }
@@ -140,7 +140,7 @@ export class JourneyScene extends Phaser.Scene {
     const color = complete ? 0xc7aa62 : state === "missed" ? 0x78565c : 0x4c5b56;
     const building = this.add.graphics().setDepth(15);
     const scale = compact ? 0.75 : 1;
-    building.fillStyle(0x111716, 1).lineStyle(2, color, complete ? 0.95 : 0.58);
+    building.fillStyle(0x111716, 1).lineStyle(2, color, complete ? 0.95 : 0.76);
     building.fillTriangle(x - 19 * scale, y - 4 * scale, x, y - 20 * scale, x + 19 * scale, y - 4 * scale);
     building.fillRect(x - 15 * scale, y - 4 * scale, 30 * scale, 22 * scale).strokeRect(x - 15 * scale, y - 4 * scale, 30 * scale, 22 * scale);
     building.fillStyle(color, complete ? 0.9 : 0.3).fillRect(x - 4 * scale, y + 4 * scale, 8 * scale, 14 * scale);

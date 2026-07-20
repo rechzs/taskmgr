@@ -26,6 +26,7 @@ export class WorldScene extends Phaser.Scene {
   private buildingLights = new Map<PillarRole, Phaser.GameObjects.Arc>();
   private unsubs: Array<() => void> = [];
   private reducedMotion = false;
+  private interactionsLocked = false;
 
   constructor() {
     super("WorldScene");
@@ -92,7 +93,7 @@ export class WorldScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true }).setDepth(25);
     zone.on("pointerover", () => this.path?.setAlpha(1));
     zone.on("pointerout", () => this.path?.setAlpha(0.9));
-    zone.on("pointerup", () => this.openJourney());
+    zone.on("pointerup", () => { if (!this.interactionsLocked) this.openJourney(); });
   }
 
   private redrawPath(width: number, height: number, impact: boolean) {
@@ -158,7 +159,7 @@ export class WorldScene extends Phaser.Scene {
         this.cameras.main.pan(altar.x, altar.y, this.reducedMotion ? 0 : 160, "Sine.easeOut");
       });
       altar.on("pointerout", () => altar.setScale(1));
-      altar.on("pointerup", () => this.focusMissionAltar(altar));
+      altar.on("pointerup", () => { if (!this.interactionsLocked) this.focusMissionAltar(altar); });
       this.altars.set(role, altar);
     });
   }
@@ -167,6 +168,7 @@ export class WorldScene extends Phaser.Scene {
     const temple = this.add.zone(width / 2, height * 0.15, Math.min(width * 0.28, 280), Math.max(70, height * 0.2))
       .setInteractive({ useHandCursor: true }).setDepth(24);
     temple.on("pointerup", () => {
+      if (this.interactionsLocked) return;
       const trophies = this.snapshot?.state.stats.trophies ?? 0;
       if (trophies > 0) this.openTrophy();
       else this.openJourney();
@@ -260,6 +262,14 @@ export class WorldScene extends Phaser.Scene {
       gameBus.on("react:mission-saved", (result) => this.reactToMission(result.completedPillarIds, result.allComplete, result.trophyAwarded)),
       gameBus.on("react:open-journey", () => this.openJourney()),
       gameBus.on("react:open-trophy", (data) => this.openTrophy(data)),
+      gameBus.on("react:pause", ({ paused }) => {
+        if (paused) {
+          this.interactionsLocked = true;
+          return;
+        }
+        this.interactionsLocked = true;
+        this.time.delayedCall(380, () => { this.interactionsLocked = false; });
+      }),
       gameBus.on("react:resume-world", () => {
         this.cameras.main.pan(this.scale.width / 2, this.scale.height / 2, this.reducedMotion ? 0 : 250, "Cubic.easeOut");
         this.cameras.main.zoomTo(1, this.reducedMotion ? 0 : 250, "Cubic.easeOut");
