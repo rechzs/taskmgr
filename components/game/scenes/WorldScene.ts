@@ -63,7 +63,7 @@ export class WorldScene extends Phaser.Scene {
     this.add.ellipse(this.ninja.x, this.ninja.y - 4, 130 * ninjaScale, 24 * ninjaScale, 0x010403, 0.5).setDepth(30);
     this.ninja.setDepth(35);
 
-    this.atmosphere = this.add.rectangle(width / 2, height / 2, width, height, 0x16344a, 0).setDepth(50).setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.atmosphere = this.add.rectangle(width / 2, height / 2, width, height, 0x16344a, 0).setDepth(22).setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.createWorldInteractions(width, height);
     this.applySnapshot(this.snapshot);
   }
@@ -134,8 +134,8 @@ export class WorldScene extends Phaser.Scene {
   private createAltars(width: number, height: number) {
     const compact = width < 680;
     const layout: Array<[PillarRole, number, number]> = compact
-      ? [["training", 0.22, 0.68], ["study", 0.5, 0.6], ["diet", 0.78, 0.68]]
-      : [["training", 0.31, 0.66], ["study", 0.5, 0.58], ["diet", 0.69, 0.66]];
+      ? [["training", 0.2, 0.68], ["study", 0.5, 0.72], ["diet", 0.8, 0.68]]
+      : [["training", 0.31, 0.66], ["study", 0.5, 0.7], ["diet", 0.69, 0.66]];
     layout.forEach(([role, px, py]) => {
       const pedestal = this.add.graphics();
       pedestal.fillStyle(0x191d1b, 0.98).lineStyle(2, 0x746d5e, 0.9);
@@ -151,7 +151,7 @@ export class WorldScene extends Phaser.Scene {
         fontFamily: PIXEL_FONT, fontSize: compact ? "5px" : "6px", color: "#c8d0c9", stroke: "#040706", strokeThickness: 4,
       }).setOrigin(0.5);
       const altar = this.add.container(width * px, height * py, [pedestal, rune, label])
-        .setSize(82, 78).setDepth(27).setInteractive({ useHandCursor: true });
+        .setSize(82, 78).setDepth(role === "study" ? 38 : 27).setInteractive({ useHandCursor: true });
       altar.setData({ role, rune, pedestal });
       altar.on("pointerover", () => {
         altar.setScale(1.06);
@@ -192,8 +192,8 @@ export class WorldScene extends Phaser.Scene {
 
   private applyAtmosphere() {
     if (!this.atmosphere || !this.projection) return;
-    if (this.projection.atmosphere === "cold") this.atmosphere.setFillStyle(0x24405a, 0.34);
-    else if (this.projection.atmosphere === "warm") this.atmosphere.setFillStyle(0x5b3217, 0.12);
+    if (this.projection.atmosphere === "cold") this.atmosphere.setFillStyle(0x24405a, 0.16);
+    else if (this.projection.atmosphere === "warm") this.atmosphere.setFillStyle(0x5b3217, 0.08);
     else if (this.projection.atmosphere === "calm") this.atmosphere.setFillStyle(0x163a34, 0.1);
     else this.atmosphere.setFillStyle(0x13283a, 0.06);
   }
