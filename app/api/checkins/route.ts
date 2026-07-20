@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getDb } from "@/lib/db";
+import { JOURNEY_END, JOURNEY_START, toLocalDate } from "@/components/game/game-math";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,10 @@ const checkinSchema = z.object({
 export async function POST(request: Request) {
   try {
     const payload = checkinSchema.parse(await request.json());
+    const today = toLocalDate(new Date());
+    if (payload.day < JOURNEY_START || payload.day > today || payload.day > JOURNEY_END) {
+      return Response.json({ error: "O dia informado está fora da jornada disponível." }, { status: 400 });
+    }
     const sql = getDb();
     const dayOfWeek = new Date(`${payload.day}T12:00:00Z`).getUTCDay();
     const pillars = await sql<{ id: number; requiredDays: number[] }[]>`

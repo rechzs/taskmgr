@@ -27,10 +27,10 @@ export class TrophyScene extends Phaser.Scene {
     this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.cameras.main.setBackgroundColor(0x050403).fadeIn(this.reducedMotion ? 0 : 550, 0, 0, 0);
 
-    const background = this.add.image(width / 2, height / 2, "kage-world-base").setTint(0x6e5532).setAlpha(0.32).setDepth(-20);
+    const background = this.add.image(width / 2, height / 2, "kage-world-base").setTint(0x8d7148).setAlpha(0.48).setDepth(-20);
     const backgroundScale = Math.max(width / background.width, height / background.height) * 1.12;
     background.setScale(backgroundScale);
-    this.add.rectangle(width / 2, height / 2, width, height, 0x090705, 0.48).setDepth(-10);
+    this.add.rectangle(width / 2, height / 2, width, height, 0x090705, 0.32).setDepth(-10);
 
     const templeWidth = compact ? width * 0.88 : Math.min(width * 0.62, 720);
     const templeHeight = compact ? height * 0.52 : height * 0.64;
@@ -86,13 +86,23 @@ export class TrophyScene extends Phaser.Scene {
   }
 
   private makeDoor(x: number, y: number, width: number, height: number, side: -1 | 1) {
-    const door = this.add.rectangle(x, y, width, height, 0x18130d).setStrokeStyle(3, 0x74562f, 0.9).setDepth(20);
-    for (let rune = 0; rune < 4; rune += 1) {
-      this.add.text(x + side * width * 0.18, y - height * 0.3 + rune * height * 0.2, "◇", {
-        fontFamily: PIXEL_FONT, fontSize: "9px", color: "#9c7136",
-      }).setOrigin(0.5).setDepth(21);
+    const panel = this.add.graphics();
+    panel.fillStyle(0x2a1b10, 1).lineStyle(4, 0x8a6232, 0.95).fillRect(-width / 2, -height / 2, width, height).strokeRect(-width / 2, -height / 2, width, height);
+    for (let plank = 1; plank < 6; plank += 1) {
+      const plankX = -width / 2 + (plank * width) / 6;
+      panel.lineStyle(2, plank % 2 ? 0x120d08 : 0x56391d, 0.75).lineBetween(plankX, -height / 2 + 4, plankX, height / 2 - 4);
     }
-    return door;
+    panel.lineStyle(7, 0x65441f, 0.95)
+      .lineBetween(-width / 2 + 12, -height * 0.28, width / 2 - 12, height * 0.28)
+      .lineBetween(-width / 2 + 12, height * 0.28, width / 2 - 12, -height * 0.28);
+    panel.fillStyle(0xb0833e, 0.95).fillCircle(side * width * 0.31, 0, 6);
+    const children: Phaser.GameObjects.GameObject[] = [panel];
+    for (let rune = 0; rune < 4; rune += 1) {
+      children.push(this.add.text(side * width * 0.18, -height * 0.3 + rune * height * 0.2, "◇", {
+        fontFamily: PIXEL_FONT, fontSize: "9px", color: "#9c7136",
+      }).setOrigin(0.5));
+    }
+    return this.add.container(x, y, children).setDepth(20);
   }
 
   private drawRunicPath(x: number, floorY: number, height: number) {
@@ -151,8 +161,8 @@ export class TrophyScene extends Phaser.Scene {
   }
 
   private runCeremony(
-    leftDoor: Phaser.GameObjects.Rectangle,
-    rightDoor: Phaser.GameObjects.Rectangle,
+    leftDoor: Phaser.GameObjects.Container,
+    rightDoor: Phaser.GameObjects.Container,
     trophy: Phaser.GameObjects.Graphics,
     light: Phaser.GameObjects.Arc,
     ninja: FullBodyNinja,
